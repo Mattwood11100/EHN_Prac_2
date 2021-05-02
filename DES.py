@@ -6,10 +6,6 @@ PC1 = np.load("DES_Permutation_Choice1.npy")
 PC2 = np.load("DES_Permutation_Choice2.npy")
 KeyRoundShifts = np.load("DES_Round_Shifts.npy")
 
-print("IP" ,IP)
-print("PC1", PC1)
-print("PC2", PC2)
-
 Expand_table = [32, 1, 2, 3, 4, 5, 4, 5,
                 6, 7, 8, 9, 8, 9, 10, 11,
                 12, 13, 12, 13, 14, 15, 16, 17,
@@ -57,6 +53,15 @@ S_Box = [[[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8],
          [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]]]
 
+    # Permutation forafter applying  S Box
+SBox_per = [16, 7, 20, 21,
+       29, 12, 28, 17,
+       1, 15, 23, 26,
+       5, 18, 31, 10,
+       2, 8, 24, 14,
+       32, 27, 3, 9,
+       19, 13, 30, 6,
+       22, 11, 4, 25]
 
 Inv_IP = [40, 8, 48, 16, 56, 24, 64, 32,
           39, 7, 47, 15, 55, 23, 63, 31,
@@ -103,15 +108,42 @@ BtH = {"0000": '0',
 
 
 def Expansion(Ri, expand):
+    Expanded = []
+        # Apply expansion on Ri to return 48 bits
+    for i in range(len(expand)):
+        Expanded.append(Ri[expand[i]-1])
 
-
-    print("Expand")
+    return Expanded
 
 
 def S_Box_Sub(input):
+    Si = []
+    Row_i = []
+    Column_i = []
+    Output_int = []
+        # Extract 6 S bits grouping
+    for i in range(int(48/6)):
+        Si.append(input[i*6:i*6+6])
+        Row_T = ""
+        Column_T = ""
+            # Get Rows and Colums
+        Row_T += Si[i][0] + Si[i][5]
+        Column_T += Si[i][1] + Si[i][2] + Si[i][3] + Si[i][4]
+        Row_i.append(int(Row_T,2))
+        Column_i.append(int(Column_T,2))
 
+            # Use row and column to get value from S Boxes
+        Output_int.append(S_Box[i][Row_i[i]][Column_i[i]])
 
-    print("S Box")
+    Output = []
+        # Convert Integer values to Bits
+    for i in range(len(Output_int)):
+        Temp = "{0:04b}".format(Output_int[i])
+        for j in range(len(Temp)):
+            Output.append(Temp[j])
+
+        # Output size is 32
+    return Output
 
 
 def To_Bits(Input):
@@ -126,24 +158,50 @@ def To_Bits(Input):
 
 
 def To_Hex(Input):
+    Output = ""
+    for i in range(int(len(Input)/4)):
+        Output += BtH[Input[i*4:i*4+4]]
 
-    print("To Hex")
+    return Output
 
 
 def C_LeftShift(Input, i):
-    Temp = np.roll(Input ,- 1 *i).tolist()
+    Temp = np.roll(Input, -1 * i).tolist()
     return Temp
 
 
 def Apply_Per(Input, Per):
     Temp = []
     for i in range(len(Per)):
-        Temp.append(Input[Per[i ] -1])
+        Temp.append(Input[Per[i] - 1])
     return Temp
 
 
-def F_Function(Ri, Ki):
+def XOR(Ri, Ki):
+    Output = []
+        # Apply bit-wise XOR between Ri and Ki
+    for i in range(len(Ri)):
+        if (Ri[i] == '1' and Ki[i] == '0') or (Ri[i] == '0' and Ki[i] == '1'):
+            Output.append('1')
+        else:
+            Output.append('0')
 
+    return Output
+
+
+def F_Function(Ri, Ki):
+        # Step 1: Expand Ri
+    Ri_Exp = Expansion(Ri,Expand_table)
+        # Step 2: XOR expanded Ri and Ki
+    XORed = XOR(Ri_Exp,Ki)
+        # Step 3: Apply S-Box substitution
+    S_Boxed = S_Box_Sub(XORed)
+        # Step 4: Apply S-Box permutation
+    S_Per = []
+    for i in range(len(SBox_per)):
+        S_Per.append(S_Boxed[SBox_per[i]-1])
+
+    return S_Per
 
     print("F Function")
 
@@ -154,23 +212,27 @@ def Key_Mutation(key, pc1, pc2, roundshift):
 
         # Apply Permutation 1
     K_PC1 = Apply_Per(K, pc1)
-
         # Get Ki before PC2
     Ki = []
     for i in range(len(roundshift)):
-        K_PC1 = C_LeftShift(K_PC1 ,roundshift[i])
+        left = K_PC1[0:28]
+        right = K_PC1[28:]
+        left = C_LeftShift(left, roundshift[i])
+        right = C_LeftShift(right, roundshift[i])
+        left.extend(right)
+        K_PC1 = left
         Ki.append(K_PC1)
 
         # Apply Permutation 2 to Ki
     Ki_PC2 = []
     for i in range(len(Ki)):
-        Ki_PC2.append(Apply_Per(Ki[i] ,PC2))
+        Ki_PC2.append(Apply_Per(Ki[i] ,pc2))
 
     return Ki_PC2
 
 
-def DES_Encrypt(plaintext, key, ip):
-    Keys = Key_Mutation(key ,PC1, PC2, KeyRoundShifts)
+def DES_Encrypt(plaintext, key, ip, inspect_mode):    # Plaintext and key input must be 64 bits in Hex/ ASCII
+    Keys = Key_Mutation(key, PC1, PC2, KeyRoundShifts)
 
 # Add check for size of text
     PT = To_Bits(plaintext)
@@ -181,13 +243,61 @@ def DES_Encrypt(plaintext, key, ip):
     Li = []
     Ri = []
 
-    Li.append(P_IP[0:31])
+    Li.append(P_IP[0:32])
     Ri.append(P_IP[32:])
 
     for i in range(16):
-        Li.append(Ri)
-        Ri.append(F_Function(Ri[i],Keys[i]))
+        Li.append(Ri[i])
+        F_Function_Out = F_Function(Ri[i],Keys[i])
+        Ri_Temp = XOR(F_Function_Out, Li[i])
+        Ri.append(Ri_Temp)
 
+        # Convert to Hex
+    Li_Hex = []
+    Ri_Hex = []
+    for i in range(len(Li)):
+        L_Temp = ""
+        R_Temp = ""
+        for j in range(int(len(Li[i])/4)):
+            L_Temp += Li[i][j * 4] + Li[i][j * 4 + 1] + Li[i][j * 4 + 2] + Li[i][j * 4 + 3]
+            R_Temp += Ri[i][j * 4] + Ri[i][j * 4 + 1] + Ri[i][j * 4 + 2] + Ri[i][j * 4 + 3]
+        Li_Hex.append(To_Hex(L_Temp))
+        Ri_Hex.append(To_Hex(R_Temp))
+
+    Keys_Hex = []
+    for i in range(len(Keys)):
+        T = ""
+        for j in range(len(Keys[i])):
+            T += Keys[i][j]
+        Keys_Hex.append(To_Hex(T))
+
+        # Print round outputs and keys
+    # for i in range(len(Li)-1):
+    #     print("round",i+1, "\tLi:", Li_Hex[i+1], "\tRi:", Ri_Hex[i+1], "\tKey:", Keys_Hex[i])
+
+    if (inspect_mode == True):
+        Rounds = []
+        for i in range(1,len(Li)):
+            Tl = Li_Hex[i]
+            Tl += Ri_Hex[i]
+            Rounds.append(Tl)
+
+    TL = Li[16]
+    TR = Ri[16]
+        # Left and right swap for final permutation
+    TR.extend(TL)
+        # Apply final permutation
+    CText = Apply_Per(TR,Inv_IP)
+    Final_B = ""
+    for i in range(len(CText)):
+        Final_B += CText[i]
+    CText = To_Hex(Final_B)
+
+    if (inspect_mode == True):
+        Out = {"ROutputs":Rounds, "Ciphertext":CText}
+        return Out
+    else:
+        return CText
     print("DES Encrypt")
 
 
@@ -213,4 +323,8 @@ def TDEA_Decrypt(inspect_mode, plaintext, key1, key2, key3, inv_ip):
 Plaintext = "02468aceeca86420"
 Key1_init = "0f1571c947d9e859"
 
-CT = DES_Encrypt(Plaintext ,Key1_init ,IP)
+Plantext = "Testing1"
+Key1_init ="Encrypt1"
+
+CT = DES_Encrypt(Plaintext, Key1_init, IP, False)
+print(CT)
