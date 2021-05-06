@@ -42,20 +42,24 @@ def RC4_Encrypt(inspect_mode, plaintext, key):
     iDict = {}
     # Creating the initial variables
     S = []
+    # S = np.asarray(S)
     T = []
+    # T = np.asarray(T)
     K = list(strToHex(key))
-    # print("S\n", S)
-    # print("T\n", T)
-    # print("K\n", K)
+    # K = np.asarray(K)
+
+    print("S\n", S)
+    print("T\n", T)
+    print("K\n", K)
 
     # Initializing the variables
     for i in range(bits):
-        S.append(hex(i).upper()[2:])
+        S.append(hex(i).upper()[2:].zfill(2))
         T.append(K[i % len(key)])
     S = np.asarray(S)
     T = np.asarray(T)
-    # print("S\n", S)
-    # print("T\n", T)
+    print("S\n", S)
+    print("T\n", T)
 
     # Initial permutation of S
     j = 0
@@ -65,11 +69,11 @@ def RC4_Encrypt(inspect_mode, plaintext, key):
         S[i] = S[j]
         S[j] = temp
 
-    # print("Encryption S\n", S)
+    print("Encryption S\n", S)
 
     if type(plaintext) == str:
-        hText = strToHex(plaintext)
-        # print("Hex Text\n", hText)
+        hText = np.asarray(strToHex(plaintext))
+        print("Hex Text\n", hText)
 
         i = 0
         j = 0
@@ -89,11 +93,11 @@ def RC4_Encrypt(inspect_mode, plaintext, key):
 
             encryptText.append(hex(int(hText[m], 16) ^ int(k, 16)).upper()[2:])
 
-        # print("k\n", kStream)
-        # print("Encrypt Text\n", encryptText)
+        print("k\n", kStream)
+        print("Encrypt Text\n", encryptText)
 
         encryptText = hexToStr(encryptText)
-        # print("Encrypt Text String\n", encryptText)
+        print("Encrypt Text String\n", encryptText)
         if inspect_mode:
             sTable = S
             ct = encryptText
@@ -123,11 +127,11 @@ def RC4_Encrypt(inspect_mode, plaintext, key):
         imgText.resize((1, sizeImgArray))
         # imgText = imgText[0]
 
-        # print(imgArray[0][:25])
-        # print(imgText[0][:25])
+        print(imgArray[0][:25])
+        print(imgText[0][:25])
 
         hImg = intToHex(imgText[0])
-        # print("Hex Img\n", hImg[:25])
+        print("Hex Img\n", hImg[:25])
 
         i = 0
         j = 0
@@ -147,14 +151,14 @@ def RC4_Encrypt(inspect_mode, plaintext, key):
 
             encryptImgHex.append(hex(int(hImg[m], 16) ^ int(k, 16)).upper()[2:])
 
-        # print("k\n", kStream[:25])
-        # print("Encrypt Text\n", encryptImgHex[:25])
+        print("k\n", kStream[:25])
+        print("Encrypt Text\n", encryptImgHex[:25])
 
         encryptImg = np.asarray(hexToInt(encryptImgHex))
         encryptImg.resize((1, sizeImgArray))
         encryptImg.resize((yLength, xLength, 3))
 
-        # print("Encrypt Image\n", encryptImg)
+        print("Encrypt Image\n", encryptImg)
 
         if inspect_mode:
             sTable = S
@@ -179,7 +183,7 @@ def RC4_Decrypt(inspect_mode, ciphertext, key):
 
     # Initializing the variables
     for i in range(bits):
-        S.append(hex(i).upper()[2:])
+        S.append(hex(i).upper()[2:].zfill(2))
         T.append(K[i % len(key)])
     S = np.asarray(S)
     T = np.asarray(T)
@@ -225,7 +229,7 @@ def RC4_Decrypt(inspect_mode, ciphertext, key):
         # print("Decrypt Text String\n", decryptText)
 
         if inspect_mode:
-            sTable = S
+            sTable = np.asarray(S.tolist())
             pt = decryptText
             iDict.update({"S-table": sTable})
             iDict.update({"Plaintext": pt})
@@ -299,94 +303,97 @@ def RC4_Decrypt(inspect_mode, ciphertext, key):
 def Testing():
     pText = "Testing if the encryption algorithm works properly"
     kText = "I am the key"
-    pImg = Image.open('circuit_low.png')
-    inspect = False
+    pImg = Image.open('circuit.png')
+    inspect = True
 
-    # eText = RC4_Encrypt(inspect, pText, kText)
-    # print(eText, "\n\n")
+    eText = RC4_Encrypt(inspect, pText, kText)
+    print(eText['S-table'], "\n\n")
+    print(eText['Ciphertext'], "\n\n")
+    print(eText, "\n\n")
+
+    if type(eText) == dict:
+        dText = RC4_Decrypt(inspect, eText["Ciphertext"], kText)
+    else:
+        dText = RC4_Decrypt(inspect, eText, kText)
+
+    print(dText['S-table'], "\n\n")
+    print(dText['Plaintext'], "\n\n")
+
+    # pImg.show()
+    # npImg = np.array(pImg)
     #
-    # if type(eText) == dict:
-    #     dText = RC4_Decrypt(inspect, eText["Ciphertext"], kText)
+    # eImg = RC4_Encrypt(inspect, npImg, kText)
+    # # print(eImg, "\n\n")
+    #
+    # if type(eImg) == dict:
+    #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
     # else:
-    #     dText = RC4_Decrypt(inspect, eText, kText)
+    #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg, kText)
     #
-    # print(dText, "\n\n")
+    # # print(dImg, "\n\n")
+    #
+    # if type(dImg) == dict:
+    #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+    #     pImg.show()
+    # else:
+    #     pImg = Image.fromarray((dImg).astype(np.uint8))
+    #     pImg.show()
 
-    pImg.show()
-    npImg = np.array(pImg)
-
-    eImg = RC4_Encrypt(inspect, npImg, kText)
-    # print(eImg, "\n\n")
-
-    if type(eImg) == dict:
-        pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
-    else:
-        pImg = Image.fromarray((eImg * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg, kText)
-
-    # print(dImg, "\n\n")
-
-    if type(dImg) == dict:
-        pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
-        pImg.show()
-    else:
-        pImg = Image.fromarray((dImg).astype(np.uint8))
-        pImg.show()
-
-    pImg = Image.open('brain_low.png')
-
-    pImg.show()
-    npImg = np.array(pImg)
-
-    eImg = RC4_Encrypt(inspect, npImg, kText)
-    # print(eImg, "\n\n")
-
-    if type(eImg) == dict:
-        pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
-    else:
-        pImg = Image.fromarray((eImg * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg, kText)
-
-    # print(dImg, "\n\n")
-
-    if type(dImg) == dict:
-        pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
-        pImg.show()
-    else:
-        pImg = Image.fromarray((dImg).astype(np.uint8))
-        pImg.show()
-
-    pImg = Image.open('starwars_low.png')
-
-    pImg.show()
-    npImg = np.array(pImg)
-
-    eImg = RC4_Encrypt(inspect, npImg, kText)
-    # print(eImg, "\n\n")
-
-    if type(eImg) == dict:
-        pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
-    else:
-        pImg = Image.fromarray((eImg * 255).astype(np.uint8))
-        pImg.show()
-        dImg = RC4_Decrypt(inspect, eImg, kText)
-
-    # print(dImg, "\n\n")
-
-    if type(dImg) == dict:
-        pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
-        pImg.show()
-    else:
-        pImg = Image.fromarray((dImg).astype(np.uint8))
-        pImg.show()
+    # pImg = Image.open('brain_low.png')
+    #
+    # pImg.show()
+    # npImg = np.array(pImg)
+    #
+    # eImg = RC4_Encrypt(inspect, npImg, kText)
+    # # print(eImg, "\n\n")
+    #
+    # if type(eImg) == dict:
+    #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
+    # else:
+    #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg, kText)
+    #
+    # # print(dImg, "\n\n")
+    #
+    # if type(dImg) == dict:
+    #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+    #     pImg.show()
+    # else:
+    #     pImg = Image.fromarray((dImg).astype(np.uint8))
+    #     pImg.show()
+    #
+    # pImg = Image.open('starwars.png')
+    #
+    # pImg.show()
+    # npImg = np.array(pImg)
+    #
+    # eImg = RC4_Encrypt(inspect, npImg, kText)
+    # # print(eImg, "\n\n")
+    #
+    # if type(eImg) == dict:
+    #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
+    # else:
+    #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+    #     pImg.show()
+    #     dImg = RC4_Decrypt(inspect, eImg, kText)
+    #
+    # # print(dImg, "\n\n")
+    #
+    # if type(dImg) == dict:
+    #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+    #     pImg.show()
+    # else:
+    #     pImg = Image.fromarray((dImg).astype(np.uint8))
+    #     pImg.show()
 
 
 start = timeit.default_timer()
