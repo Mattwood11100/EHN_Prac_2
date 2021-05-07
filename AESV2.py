@@ -3,7 +3,7 @@ from PIL import Image
 import random
 from timeit import default_timer
 
-np.set_printoptions(precision=4, suppress=False)
+np.set_printoptions(precision=4, suppress=False, threshold=100000)
 
 
 class AES():
@@ -208,12 +208,6 @@ def bitShift2(hNum, times):
 
 
 def GF(hNum1, hNum2):
-    if len(hNum1) == 1:
-        hNum1 = hNum1.zfill(2)
-
-    if len(hNum2) == 1:
-        hNum2 = hNum1.zfill(2)
-
     bNum1 = np.flip(npHex2Bin(hNum1))
 
     result = []
@@ -260,6 +254,45 @@ def mixColumns(state):
                               xor(GF(galoisMatrix[3][2], temp[i][2]), GF(galoisMatrix[3][3], temp[i][3]))))
     return byteToStr(state.tolist())
 
+temp1 = []
+temp2 = []
+temp3 = []
+temp9 = []
+tempB = []
+tempD = []
+tempE = []
+
+for i in range(100):
+    # temp1.append(GF('01', hex(int(i)).upper()[2:].zfill(2)))
+    temp1.append(GF('01', str(i).zfill(2)))
+    temp2.append(GF('02', str(i).zfill(2)))
+    temp3.append(GF('03', str(i).zfill(2)))
+    temp9.append(GF('09', str(i).zfill(2)))
+    tempB.append(GF('0B', str(i).zfill(2)))
+    tempD.append(GF('0D', str(i).zfill(2)))
+    tempE.append(GF('0E', str(i).zfill(2)))
+
+print(temp1)
+print(temp2)
+print(temp3)
+print(temp9)
+print(tempB)
+print(tempD)
+print(tempE)
+
+gf = []
+gf.append(temp1)
+gf.append(temp2)
+gf.append(temp3)
+gf.append(temp9)
+gf.append(tempB)
+gf.append(tempD)
+gf.append(tempE)
+print(gf)
+# print(GF('09',''))
+# print(GF('0B','10'))
+# print(GF('0D','10'))
+# print(GF('0E','10'))
 
 # state = np.array([['876E46A6'],
 #                   ['F24CE78C'],
@@ -507,9 +540,9 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
         # encryptedText.resize((yLength, xLength, 3))
         encryptedText = np.array(encryptedText, dtype=np.uint8)
         if inspect_mode:
-            return {"States": stateFinal, "Ciphertext": hexToStr(encryptedText)}
+            return {"States": stateFinal, "Ciphertext": Image.fromarray(encryptedText)}
         else:
-            return encryptedText
+            return Image.fromarray(encryptedText)
     else:
         if inspect_mode:
             return {"States": stateFinal, "Ciphertext": hexToStr(encryptedText)}
@@ -519,50 +552,30 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
 
 def Testing():
     pText = "Testing if the encryption algorithm works properly"
-    # pText = "Testing"
-    # pHex = strToHex(pText)
-    # print(0x00)
-    # print(pHex)
-    # print(len(pText))
     kText = "I am the key"
-    # pHex = np.array(['00', '11', '22', '33', '44', '55', '66', '77', '88', '99', 'AA', 'BB', 'CC', 'DD', 'EE', 'FF'])
-    # kHex = np.array(['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '0A', '0B', '0C', '0D', '0E', '0F',
-    #                  '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '1A', '1B', '1C', '1D', '1E', '1F'])
-    # pHex = np.array(['01', '23', '45', '67', '89', 'AB', 'CD', 'EF', 'FE', 'DC', 'BA', '98', '76', '54', '32', '10'])
-    # kHex = np.array(['0F', '15', '71', 'C9', '47', 'D9', 'E8', '59', '0C', 'B7', 'AD', 'D6', 'AF', '7F', '67', '98'])
-    # pImg = Image.open('brain_low.png')
-    pImg = Image.open('circuit_small_big.png')
-    pImg.show()
-    npImg = np.array(pImg)
-    # inspect = False
     inspect = False
     ivFile = np.load('AES_CBC_IV.npy')
-    # print(len(hexToHex(ivFile)))
-    # print(len(pHex))
-    # ivFile = None
     sboxFile = np.load('AES_Sbox_lookup.npy')
     invSboxFile = np.load('AES_Inverse_Sbox_lookup.npy')
 
-    # eText = AES_Encrypt(inspect, pHex, ivFile, kHex, sboxFile)
+    # pHex = np.array(['00', '11', '22', '33', '44', '55', '66', '77', '88', '99', 'AA', 'BB', 'CC', 'DD', 'EE', 'FF'])
+    # kHex = np.array(['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '0A', '0B', '0C', '0D', '0E', '0F',
+    #                  '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '1A', '1B', '1C', '1D', '1E', '1F'])
+
+    pImg = Image.open('circuit_small_big.png')
+    pImg.show()
+    npImg = np.array(pImg)
+
+    # eHex = AES_Encrypt(inspect, pHex, ivFile, kHex, sboxFile)
+
     # eText = AES_Encrypt(inspect, pText, ivFile, kText, sboxFile)
-    eText = AES_Encrypt(inspect, npImg, ivFile, kText, sboxFile)
-    eImg = Image.fromarray(eText)
+
+    eImg = AES_Encrypt(inspect, npImg, ivFile, kText, sboxFile)
     eImg.show()
-    # print(eText)
-    # print(IV.iv)
+
+
 
 
 start = default_timer()
 # Testing()
-print(GF('57', '13'))
-GaloisField = np.ones((256, 256), dtype=int)
-GaloisField = GaloisField.tolist()
-for i in range(256):
-    print(i)
-    for j in range(256):
-        GaloisField[i][j] = GF(hex(i).upper()[2:], hex(j).upper()[2:])
-GaloisField = np.asarray(GaloisField)
-np.save('Galois_Field.npy', GaloisField)
-print(GaloisField)
-
 print("Done in ", default_timer() - start, "s\n")
