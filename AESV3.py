@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 import random
 from timeit import default_timer
+from datetime import datetime
 
 np.set_printoptions(precision=4, suppress=False, threshold=100000)
 
@@ -775,8 +776,8 @@ def Testing():
 
         "imgListLarge": ['circuit', 'brain', 'starwars']}
 
-    for i in Imagess["imgListLarge"]:
-        print(f"Running {i} now\n")
+    for i in Imagess["imgListLow"]:
+        print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
         start = default_timer()
 
         pImg = Image.open(i + '.png')
@@ -789,9 +790,9 @@ def Testing():
         eImg = np.array(eImg)
 
         if default_timer() - start > 60:
-            print(f"Done encryption in {(default_timer() - start) / 60} minutes")
+            print(f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
         else:
-            print(f"Done encryption in {default_timer() - start} seconds")
+            print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
         start = default_timer()
 
@@ -799,14 +800,14 @@ def Testing():
         dImg.show()
 
         if default_timer() - start > 60:
-            print(f"Done decryption in {(default_timer() - start) / 60} minutes\n\n")
+            print(f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
         else:
-            print(f"Done decryption in {default_timer() - start} seconds\n\n")
+            print(f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
 
 
 start = default_timer()
 Testing()
 if default_timer() - start > 60:
-    print(f"Finally done in {(default_timer() - start) / 60} minutes\n")
+    print(f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
 else:
-    print(f"Finally done in {default_timer() - start} s\n")
+    print(f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
