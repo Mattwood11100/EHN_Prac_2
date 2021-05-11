@@ -7,16 +7,23 @@ from datetime import datetime
 np.set_printoptions(precision=4, suppress=False, threshold=100000)
 
 
+# Class for the Initial Vector for the CBC. If the vector provided is
+# none or empty then a random IV is created
 class AES():
     def __init__(self, iv):
         self.iv = iv
 
 
+# Initializing the class variable so that it can be used by the
+# encryption and decryption algorithms
 IV = AES('')
 
+# Loading the look-up table for the Galois Filed Multiplications
 Galois_Field = np.load('Galois_Field.npy')
 
 
+# Helper function that removes the '0x' part from a hex string
+# for a 1 dimensional array
 def hexToHex(text):
     for i in range(len(text)):
         text[i] = text[i].upper()[2:]
@@ -24,6 +31,8 @@ def hexToHex(text):
     return text
 
 
+# Helper function that removes the '0x' part from a hex string
+# for a 2 dimensional array
 def hexToHex2D(text):
     for i in range(len(text)):
         for j in range(len(text[i])):
@@ -32,28 +41,16 @@ def hexToHex2D(text):
     return text
 
 
-def npBin2Hex(bNum):
-    return np.array(list(hex(int(bNum, 2)).upper()[2:].zfill(2)))
-
-
-def bin2Hex(bNum):
-    return hex(int(bNum, 2)).upper()[2:].zfill(len(bNum) // 4)
-
-
-def npHex2Bin(hNum):
-    return np.array(list(bin(int(hNum, 16))[2:].zfill(len(hNum) * 4)))
-
-
-def hex2Bin(hNum):
-    return bin(int(hNum, 16))[2:].zfill(8)
-
-
+# Helper function that converts hex numbers to the respective
+# ASCII character
 def hexToStr(text):
     text = np.asarray(stateResize(text, 2)).reshape((len(text) // 2))
 
     return ''.join(chr(int(i, 16)) for i in text)
 
 
+# Helper function that converts the ASCII character to the
+# respective hex number
 def strToHex(text):
     hexOut = []
     for i in text:
@@ -62,6 +59,8 @@ def strToHex(text):
     return hexOut
 
 
+# Helper function that converts int numbers to hex numbers, this
+# is used when encrypting and decrypting images
 def intToHex(text):
     hexOut = []
     for i in text:
@@ -70,42 +69,31 @@ def intToHex(text):
     return hexOut
 
 
-def hexToInt(text):
+# Helper function that converts hex numbers to int numbers, this
+# is used when encrypting and decrypting images
+def hexToIntFinal(state):
     intOut = []
-    for i in text:
-        intOut.append(int(i, 16))
+
+    for i in range(len(state)):
+        intOut.append(int(state[i], 16))
 
     return intOut
 
 
-# print(npHex2Bin('473794ED'))
-# print(hex2Bin('AA'))
-#
-# print(npBin2Hex(hex2Bin('AA')))
-# print(bin2Hex(hex2Bin('AA')))
-
-
+# Helper function that returns the XOR result of two strings
 def xor(hNum1, hNum2):
-    # bNum1 = npHex2Bin(hNum1)
-    # bNum2 = npHex2Bin(hNum2)
-    # result = np.array([], dtype=str)
-    #
-    # for i in range(len(bNum1)):
-    #     result = np.append(result, np.bitwise_xor(int(bNum1[i], 2), int(bNum2[i], 2)))
-    #
-    # return bin2Hex(''.join(result))
-
     return hex(int(hNum1, 16) ^ int(hNum2, 16)).upper()[2:].zfill(len(hNum1))
 
 
+# Helper function that returns the XOR result of two arrays
 def xorArray(hList1, hList2):
     return stateResize(hex(int(''.join(hList1), 16) ^ int(''.join(hList2), 16)).upper()[2:].zfill(len(
         ''.join(hList1))), 8)
 
 
-# print(xor('47', 'AC'))
-
-
+# This function is part of the encryption and decryption process,
+# the functions returns the result of XORing the provided state
+# with the provided key
 def addRoundKey(state, key):
     result = np.empty_like(state)
 
@@ -115,19 +103,9 @@ def addRoundKey(state, key):
     return np.asarray(result)
 
 
-# state = np.array(['473794ED',
-#                   '40D4E4A5',
-#                   'A3703AA6',
-#                   '4C9F42BC'])
-#
-# key = np.array(['AC7766F3',
-#                 '19FADC21',
-#                 '28D12941',
-#                 '575C006A'])
-#
-# print(addRoundKey(state, key))
-
-
+# Helper function that changes the shape of the state array, the
+# size is how many hex numbers must be in each element of the
+# returned array
 def stateResize(state, size):
     hBytes = []
     state = ''.join(state)
@@ -137,6 +115,9 @@ def stateResize(state, size):
     return np.array(hBytes)
 
 
+# Helper function that takes the state array of the form
+# "['FE', 'A5', '58', '42']" and returns the elements as
+# one continuous string
 def byteToStr(state):
     for i in range(len(state)):
         state[i] = ''.join(state[i])
@@ -144,11 +125,13 @@ def byteToStr(state):
     return np.asarray(state)
 
 
+# This function is part of the encryption and decryption process,
+#  depending on the sbox provided, the sbox is used to substitute
+#  the hex numbers in the state array, using the values of the hex
+#  number in the state array as the index of the sbox elements.
 def sBox(state, sbox):
-    # state = np.array(strToByte(''.join(state)))
     state = stateResize(state, 2)
     state = state.reshape((4, 4))
-    # t = state
     for i in range(len(state)):
         for j in range(len(state[i])):
             x = int(state[i][j][0], 16)
@@ -159,16 +142,10 @@ def sBox(state, sbox):
     return byteToStr(state.tolist())
 
 
-# sboxFile = hexToHex2D(np.load('AES_Sbox_lookup.npy'))
-#
-# state = np.array(['EA835CF0',
-#                   '0445332D',
-#                   '655D98AD',
-#                   '8596B0C5'])
-#
-# print(sBox(state, sboxFile))
-
-
+# This function is part of the encryption process, it performs
+# a circular right shifts on each row of the state array,
+# 0 shifts for the first row, 1 shift for the second row,
+# 2 shifts for the third row and 3 shifts for the fourth row
 def shiftRow(state):
     state = stateResize(state, 2)
     state = state.reshape((4, 4))
@@ -189,6 +166,11 @@ def shiftRow(state):
 
     return byteToStr(state.tolist())
 
+
+# This function is part of the decryption process, it performs
+# a circular left shifts on each row of the state array,
+# 0 shifts for the first row, 1 shift for the second row,
+# 2 shifts for the third row and 3 shifts for the fourth row
 
 def invShiftRow(state):
     state = stateResize(state, 2)
@@ -211,33 +193,9 @@ def invShiftRow(state):
     return byteToStr(state.tolist())
 
 
-# state = np.array([['87EC4A8C'],
-#                   ['F26EC3D8'],
-#                   ['4D4C4695'],
-#                   ['9790E7A6']])
-#
-# print(shiftRow(state))
-
-
+# Helper function that returns the multiplication of two
+# hex numbers with in the GF(2^8) field
 def GF(hNum1, hNum2):
-    #     bNum1 = np.flip(npHex2Bin(hNum1))
-    #
-    #     result = []
-    #
-    #     for i in range(len(bNum1)):
-    #         if bNum1[i] == '1':
-    #             result.append(bitShift2(hNum2, i))
-    #
-    #     if len(result) == 0:
-    #         return '00'
-    #     elif len(result) == 1:
-    #         return result[0]
-    #     else:
-    #         for i in range(len(result) - 1):
-    #             result[i + 1] = xor(result[i], result[i + 1])
-    #
-    #         return result[len(result) - 1]
-
     x = 0
     if hNum1 == '01':
         x = 0
@@ -256,10 +214,11 @@ def GF(hNum1, hNum2):
 
     y = int(hNum2, 16)
 
-    temp = Galois_Field[x][y]
     return Galois_Field[x][y]
 
 
+# This function is part of the encryption process, it performs
+# the required column mixing by using multiplication of the GF(2^8) field.
 def mixColumns(state):
     state = stateResize(state, 2)
     state = state.reshape((4, 4))
@@ -289,6 +248,8 @@ def mixColumns(state):
     return byteToStr(state.tolist())
 
 
+# This function is part of the decryption process, it performs
+# the required column mixing by using multiplication of the GF(2^8) field.
 def invMixColumns(state):
     state = stateResize(state, 2)
     state = state.reshape((4, 4))
@@ -322,50 +283,12 @@ def invMixColumns(state):
     return byteToStr(state.tolist())
 
 
-# state = np.array(['02030101',
-#                   '01020301',
-#                   '01010203',
-#                   '03010102'])
-# num = 25
-# print("Number", end="\n\t")
-# for i in range(num):
-#     print(i, end="\t")
-# print()
-#
-# print("09", end="\t")
-# for i in range(num):
-#     print(Galois_Field[0][i], end="\t")
-# print()
-#
-# print("0B", end="\t")
-# for i in range(num):
-#     print(Galois_Field[1][i], end="\t")
-# print()
-#
-# print("0D", end="\t")
-# for i in range(num):
-#     print(Galois_Field[2][i], end="\t")
-# print()
-#
-# print("0E", end="\t")
-# for i in range(num):
-#     print(Galois_Field[6][i], end="\t")
-# print()
-#
-#
-# # print(Galois_Field)
-# print(invMixColumns(state))
-
-
-# print(Galois_Field)
-# print(GF('02', '87'))
-# print()
-
-
+# Helper function that returns a word that has be circularly left shift once.
 def rotWord(word):
-    return bin2Hex(''.join(np.roll(npHex2Bin(word), -8)))
+    return ''.join(np.roll(stateResize(word, 2), -1).tolist())
 
 
+# Helper function used to perform the substitution of the elements in the provided word
 def sBoxExpandKey(word, sbox):
     word = stateResize(word, 2)
     result = []
@@ -378,6 +301,8 @@ def sBoxExpandKey(word, sbox):
     return ''.join(result)
 
 
+# This is used in both encryption and decryption process, in order
+# to expand the key to the required length
 def expandKey(key):
     sbox = hexToHex2D(np.load("AES_Sbox_lookup.npy"))
     nK = 8
@@ -389,36 +314,21 @@ def expandKey(key):
         w[i] = key[4 * i] + key[4 * i + 1] + key[4 * i + 2] + key[4 * i + 3]
 
     for i in range(nK, 60):
-        # print("i\t\t\t\t\t", i)
         temp = w[i - 1]
-        # print("Temp\t\t\t\t", temp)
 
         if i % nK == 0:
-            # rot = rotWord(temp)
-            # print("After RotWord\t\t", rot)
-            # t = sBoxExpandKey(rot, sbox)
-            # print("After SubWord\t\t", t)
-            # print("Rcon\t\t\t\t", rCon[(i // nK) - 1])
             temp = xor(sBoxExpandKey(rotWord(temp), sbox), rCon[(i // nK) - 1])
-            # print("After XOR with Rcon\t", temp)
 
         elif nK > 6 and i % nK == 4:
             temp = sBoxExpandKey(temp, sbox)
-            # print("After SubWord\t\t", temp)
-
-        # print("w[i-NK]\t\t\t\t", w[i - nK])
 
         w[i] = xor(w[i - nK], temp)
-        # print("w[i]\t\t\t\t", w[i], "\n\n")
 
     return w
 
 
-# x = np.array(['60', '3D', 'EB', '10', '15', 'CA', '71', 'BE', '2B', '73', 'AE', 'F0', '85', '7D', '77', '81',
-#               '1F', '35', '2C', '07', '3B', '61', '08', 'D7', '2D', '98', '10', 'A3', '09', '14', 'DF', 'F4'])
-# sboxFile = np.load('AES_Sbox_lookup.npy')
-# print(stateResize(expandKey(x, hexToHex2D(sboxFile)),8))
-
+# Helper function that appends the require amount in order to make the plaintext
+# length divisible by 16 bytes
 def strResizePlaintext(text):
     temp = []
     modLength = len(text) % 16
@@ -433,6 +343,8 @@ def strResizePlaintext(text):
     return temp
 
 
+# Helper function that appends the require amount in order to make the key
+# length divisible by 32 bytes
 def strResizeKey(text):
     temp = []
     modLength = len(text) % 32
@@ -444,37 +356,7 @@ def strResizeKey(text):
     return text
 
 
-# def xorArray(hNum1, hNum2):
-#     bNum1 = []
-#     bNum2 = []
-#     temp1 = []
-#     temp2 = []
-#     for i in range(len(hNum1)):
-#         temp1.append(npHex2Bin(hNum1[i]).tolist())
-#         temp2.append(npHex2Bin(hNum2[i]).tolist())
-#
-#     for i in range(len(temp1)):
-#         for j in range(len(temp1[i])):
-#             bNum1.append(temp1[i][j])
-#             bNum2.append(temp2[i][j])
-#
-#     result = np.array([], dtype=str)
-#
-#     for i in range(len(bNum1)):
-#         result = np.append(result, np.bitwise_xor(int(bNum1[i], 2), int(bNum2[i], 2)))
-#
-#     return bin2Hex(''.join(result))
-
-
-def hexToIntFinal(state):
-    intOut = []
-
-    for i in range(len(state)):
-        intOut.append(int(state[i], 16))
-
-    return intOut
-
-
+# Helper function that reshapes the state array for printing purposes
 def state4x4Print(state):
     state = stateResize(state, 2)
     state = state.reshape((4, 4))
@@ -487,12 +369,14 @@ def state4x4Print(state):
     return state.tolist()
 
 
+# Function that uses CBC AES encryption to encrypt either plaintext messages or png images
 def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
     isImg = False
     yLength = 0
     xLength = 0
     sizeImgArray = 0
 
+    # Checking if the plaintext provided is string message or a png image
     if type(plaintext) == str:
         plaintext = strResizePlaintext(strToHex(plaintext))
     elif type(plaintext) == np.ndarray:
@@ -517,10 +401,14 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
 
         plaintext = strResizePlaintext(intToHex(imgText[0]))
 
-    if iv is None:
+    # Checking if the IV provided is empty, if so then random bytes are
+    # generated otherwise the provided IV is used
+    if iv is None or len(iv) == 0:
         IV.iv = []
-        for i in range(len(plaintext)):
+        for i in range(len(plaintext[0])):
             IV.iv.append(hex(random.randint(0, 255)).upper()[2:].zfill(2))
+        iv = IV.iv
+        print(f"The random IV is {iv}\n")
     else:
         iv = hexToHex(iv)
 
@@ -529,22 +417,25 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
     state = ""
     encryptedFinal = []
     encryptedText = iv
-    plaintextCopy = plaintext
-    key = strResizeKey(strToHex(key))
 
+    plaintextCopy = plaintext
+
+    # Expanding the key to required length
+    key = strResizeKey(strToHex(key))
     temp = expandKey(key)
     key = []
     for i in range(0, len(temp), 4):
         key.append(temp[i:i + 4])
     key = np.asarray(key)
 
-    start = default_timer()
+    # For loop for encrypting each 16 byte piece of the provided plaintext
     for pNum in range(len(plaintextCopy)):
         stateArray = []
         plaintext = xorArray(encryptedText, plaintextCopy[pNum])
 
         state = addRoundKey(plaintext, key[0])
 
+        # for loop to go through the 14 required rounds for encrypting the provided plaintext
         for rNum in range(1, 14):
             stateArray.append(state4x4Print(state))
 
@@ -568,6 +459,9 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
         encryptedText = stateResize(state, 2)
         encryptedFinal.append(''.join(encryptedText))
 
+    # Checking if the provided plaintext is an png image,
+    # if so then the encrypted text is reshaped and converted to
+    # int numbers otherwise the encrypted text is returned
     if isImg:
         encryptedText = np.array(hexToIntFinal(stateResize(encryptedFinal, 2)))[:sizeImgArray]
         encryptedText.resize((yLength, xLength, 3))
@@ -583,12 +477,14 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
             return hexToStr(''.join(encryptedFinal))
 
 
+# Function that uses CBC AES decryption to decrypt either ciphertext messages or png images
 def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
     isImg = False
     yLength = 0
     xLength = 0
     sizeImgArray = 0
 
+    # Checking if the plaintext provided is string message or a png image
     if type(ciphertext) == str:
         ciphertext = strResizePlaintext(strToHex(ciphertext))
     elif type(ciphertext) == np.ndarray:
@@ -613,10 +509,11 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
 
         ciphertext = strResizePlaintext(intToHex(imgText[0]))
 
-    if iv is None:
-        IV.iv = []
-        for i in range(len(ciphertext)):
-            IV.iv.append(hex(random.randint(0, 255)).upper()[2:].zfill(2))
+    # Checking if the IV provided is empty, if so then random bytes that were
+    # generated during the encryption process are used otherwise the provided IV is used
+    if iv is None or len(iv) == 0:
+        iv = IV.iv
+        print(f"The random IV is {iv}\n")
     else:
         iv = hexToHex(iv)
 
@@ -627,14 +524,16 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
     decryptedText = iv
 
     ciphertextCopy = ciphertext
-    key = strResizeKey(strToHex(key))
 
+    # Expanding the key to required length
+    key = strResizeKey(strToHex(key))
     temp = expandKey(key)
     key = []
     for i in range(0, len(temp), 4):
         key.append(temp[i:i + 4])
     key = np.flipud(np.asarray(key))
 
+    # For loop for encrypting each 16 byte piece of the provided ciphertext
     for pNum in range(len(ciphertextCopy)):
         stateArray = []
 
@@ -642,6 +541,7 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
 
         state = addRoundKey(ciphertext, key[0])
 
+        # for loop to go through the 14 required rounds for decrypting the provided ciphertext
         for rNum in range(1, 14):
             stateArray.append(state4x4Print(state))
 
@@ -670,6 +570,10 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
         decryptedText = stateResize(decryptedText, 2)
         decryptedFinal.append(''.join(decryptedText))
 
+
+    # Checking if the provided ciphertext is an png image,
+    # if so then the decrypted text is reshaped and converted to
+    # int numbers otherwise the decrypted text is returned
     if isImg:
         decryptedText = np.array(hexToIntFinal(stateResize(decryptedFinal, 2)))[:sizeImgArray]
         decryptedText.resize((yLength, xLength, 3))
@@ -685,8 +589,10 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
             return hexToStr(''.join(decryptedFinal))
 
 
+# Testing function
 def Testing():
     inspect = True
+    ivCBC = True
     doImages = False
 
     if not inspect:
@@ -694,26 +600,53 @@ def Testing():
         pText = "You won't get me"
         kText = "I am the key that won't be broke"
         start = default_timer()
+        if not ivCBC:
+            eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
+            print(f"Encryption\nCiphertext:\n{eText}")
 
-        eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-        print(eText)
+            if default_timer() - start > 60:
+                print(
+                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            else:
+                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
-        if default_timer() - start > 60:
-            print(
-                f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            start = default_timer()
+
+            dText = AES_Decrypt(inspect, eText, None, kText,
+                                np.load('AES_Inverse_Sbox_lookup.npy'))
+            print(f""
+                  f"\nDecryption\nPlaintext:\n{dText}")
+
+            if default_timer() - start > 60:
+                print(
+                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            else:
+                print(
+                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+
         else:
-            print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
-        start = default_timer()
+            eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+            print(eText)
 
-        dText = AES_Decrypt(inspect, eText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Inverse_Sbox_lookup.npy'))
-        print(dText)
+            if default_timer() - start > 60:
+                print(
+                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            else:
+                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
-        if default_timer() - start > 60:
-            print(
-                f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-        else:
-            print(f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            start = default_timer()
+
+            dText = AES_Decrypt(inspect, eText, np.load('AES_CBC_IV.npy'), kText,
+                                np.load('AES_Inverse_Sbox_lookup.npy'))
+            print(dText)
+
+            if default_timer() - start > 60:
+                print(
+                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            else:
+                print(
+                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
 
         if doImages:
             Images = {
@@ -763,27 +696,54 @@ def Testing():
         kText = "I am the key that won't be broke"
         start = default_timer()
 
-        eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-        print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+        if not ivCBC:
+            eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
+            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
 
-        if default_timer() - start > 60:
-            print(
-                f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            if default_timer() - start > 60:
+                print(
+                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            else:
+                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+
+            start = default_timer()
+
+            dText = AES_Decrypt(inspect, eText['Ciphertext'], None, kText,
+                                np.load('AES_Inverse_Sbox_lookup.npy'))
+            print(f""
+                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+
+            if default_timer() - start > 60:
+                print(
+                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            else:
+                print(
+                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+
         else:
-            print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
-        start = default_timer()
+            eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
 
-        dText = AES_Decrypt(inspect, eText['Ciphertext'], np.load('AES_CBC_IV.npy'), kText,
-                            np.load('AES_Inverse_Sbox_lookup.npy'))
-        print(f""
-              f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+            if default_timer() - start > 60:
+                print(
+                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+            else:
+                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
 
-        if default_timer() - start > 60:
-            print(
-                f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-        else:
-            print(f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            start = default_timer()
+
+            dText = AES_Decrypt(inspect, eText['Ciphertext'], np.load('AES_CBC_IV.npy'), kText,
+                                np.load('AES_Inverse_Sbox_lookup.npy'))
+            print(f""
+                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+
+            if default_timer() - start > 60:
+                print(
+                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+            else:
+                print(
+                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
 
         if doImages:
             Images = {
