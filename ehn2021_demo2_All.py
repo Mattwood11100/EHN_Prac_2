@@ -43,7 +43,7 @@ def hexToHex2D(text):
 
 # Helper function that converts hex numbers to the respective
 # ASCII character
-def hexToStr(text):
+def hexToStrAES(text):
     text = np.asarray(stateResize(text, 2)).reshape((len(text) // 2))
 
     return ''.join(chr(int(i, 16)) for i in text)
@@ -51,7 +51,7 @@ def hexToStr(text):
 
 # Helper function that converts the ASCII character to the
 # respective hex number
-def strToHex(text):
+def strToHexAES(text):
     hexOut = []
     for i in text:
         hexOut.append(hex(ord(i)).upper()[2:].zfill(2))
@@ -61,7 +61,7 @@ def strToHex(text):
 
 # Helper function that converts int numbers to hex numbers, this
 # is used when encrypting and decrypting images
-def intToHex(text):
+def intToHexAES(text):
     hexOut = []
     for i in text:
         hexOut.append(hex(i).upper()[2:].zfill(2))
@@ -71,7 +71,7 @@ def intToHex(text):
 
 # Helper function that converts hex numbers to int numbers, this
 # is used when encrypting and decrypting images
-def hexToIntFinal(state):
+def hexToIntAES(state):
     intOut = []
 
     for i in range(len(state)):
@@ -378,7 +378,7 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
 
     # Checking if the plaintext provided is string message or a png image
     if type(plaintext) == str:
-        plaintext = strResizePlaintext(strToHex(plaintext))
+        plaintext = strResizePlaintext(strToHexAES(plaintext))
     elif type(plaintext) == np.ndarray:
         isImg = True
         imgArray = []
@@ -399,7 +399,7 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
         imgText = np.array(imgArray, dtype=int)
         imgText.resize((1, sizeImgArray))
 
-        plaintext = strResizePlaintext(intToHex(imgText[0]))
+        plaintext = strResizePlaintext(intToHexAES(imgText[0]))
 
     # Checking if the IV provided is empty, if so then random bytes are
     # generated otherwise the provided IV is used
@@ -421,7 +421,7 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
     plaintextCopy = plaintext
 
     # Expanding the key to required length
-    key = strResizeKey(strToHex(key))
+    key = strResizeKey(strToHexAES(key))
     temp = expandKey(key)
     key = []
     for i in range(0, len(temp), 4):
@@ -463,7 +463,7 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
     # if so then the encrypted text is reshaped and converted to
     # int numbers otherwise the encrypted text is returned
     if isImg:
-        encryptedText = np.array(hexToIntFinal(stateResize(encryptedFinal, 2)))[:sizeImgArray]
+        encryptedText = np.array(hexToIntAES(stateResize(encryptedFinal, 2)))[:sizeImgArray]
         encryptedText.resize((yLength, xLength, 3))
         encryptedText = np.array(encryptedText, dtype=np.uint8)
         if inspect_mode:
@@ -472,9 +472,9 @@ def AES_Encrypt(inspect_mode, plaintext, iv, key, sbox_array):
             return Image.fromarray(encryptedText)
     else:
         if inspect_mode:
-            return {"States": stateFinal, "Ciphertext": hexToStr(''.join(encryptedFinal))}
+            return {"States": stateFinal, "Ciphertext": hexToStrAES(''.join(encryptedFinal))}
         else:
-            return hexToStr(''.join(encryptedFinal))
+            return hexToStrAES(''.join(encryptedFinal))
 
 
 # Function that uses CBC AES decryption to decrypt either ciphertext messages or png images
@@ -486,7 +486,7 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
 
     # Checking if the plaintext provided is string message or a png image
     if type(ciphertext) == str:
-        ciphertext = strResizePlaintext(strToHex(ciphertext))
+        ciphertext = strResizePlaintext(strToHexAES(ciphertext))
     elif type(ciphertext) == np.ndarray:
         isImg = True
         imgArray = []
@@ -507,7 +507,7 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
         imgText = np.array(imgArray, dtype=int)
         imgText.resize((1, sizeImgArray))
 
-        ciphertext = strResizePlaintext(intToHex(imgText[0]))
+        ciphertext = strResizePlaintext(intToHexAES(imgText[0]))
 
     # Checking if the IV provided is empty, if so then random bytes that were
     # generated during the encryption process are used otherwise the provided IV is used
@@ -526,7 +526,7 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
     ciphertextCopy = ciphertext
 
     # Expanding the key to required length
-    key = strResizeKey(strToHex(key))
+    key = strResizeKey(strToHexAES(key))
     temp = expandKey(key)
     key = []
     for i in range(0, len(temp), 4):
@@ -575,7 +575,7 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
     # if so then the decrypted text is reshaped and converted to
     # int numbers otherwise the decrypted text is returned
     if isImg:
-        decryptedText = np.array(hexToIntFinal(stateResize(decryptedFinal, 2)))[:sizeImgArray]
+        decryptedText = np.array(hexToIntAES(stateResize(decryptedFinal, 2)))[:sizeImgArray]
         decryptedText.resize((yLength, xLength, 3))
         decryptedText = np.array(decryptedText, dtype=np.uint8)
         if inspect_mode:
@@ -584,9 +584,9 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
             return Image.fromarray(decryptedText)
     else:
         if inspect_mode:
-            return {"States": stateFinal, "Plaintext": hexToStr(''.join(decryptedFinal))}
+            return {"States": stateFinal, "Plaintext": hexToStrAES(''.join(decryptedFinal))}
         else:
-            return hexToStr(''.join(decryptedFinal))
+            return hexToStrAES(''.join(decryptedFinal))
 
 # TODO Testing
 
@@ -801,3 +801,416 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
 # else:
 #     print(f"Finally finished in {default_timer() - start} seconds a"
 #           f"t {datetime.now().strftime('%H:%M:%S')}\n\n")
+
+
+# Helper function the converts strings to hex numbers
+def strToHexRC4(text):
+    hexOut = []
+    for i in text:
+        hexOut.append(hex(ord(i)).upper()[2:])
+
+    return hexOut
+
+
+# Helper function the converts hex numbers to strings
+def hexToStrRC4(text):
+    strOut = []
+    for i in text:
+        strOut.append(chr(int(i, 16)))
+
+    return ''.join(strOut)
+
+
+# Helper function that converts int numbers to hex numbers
+def intToHexRC4(text):
+    hexOut = []
+    for i in text:
+        hexOut.append(hex(i).upper()[2:])
+
+    return hexOut
+
+
+# Helper function that converts hex numbers to int numbers
+def hexToIntRC4(text):
+    intOut = []
+    for i in text:
+        intOut.append(int(i, 16))
+
+    return intOut
+
+
+# Function that uses the RC4 stream cipher encryption method to
+# encrypt plaintext messages or png images
+def RC4_Encrypt(inspect_mode, plaintext, key):
+    bits = 256
+    iDict = {}
+    # Creating the initial variables
+    S = []
+    # S = np.asarray(S)
+    T = []
+    # T = np.asarray(T)
+    K = list(strToHexRC4(key))
+    # K = np.asarray(K)
+
+    print("S\n", S)
+    print("T\n", T)
+    print("K\n", K)
+
+    # Initializing the variables
+    for i in range(bits):
+        S.append(hex(i).upper()[2:].zfill(2))
+        T.append(K[i % len(key)])
+    S = np.asarray(S)
+    T = np.asarray(T)
+    print("S\n", S)
+    print("T\n", T)
+
+    # Initial permutation of S
+    j = 0
+    for i in range(bits):
+        j = (j + int(S[i], 16) + int(T[i], 16)) % bits
+        temp = S[i]
+        S[i] = S[j]
+        S[j] = temp
+
+    # print("Encryption S\n", S)
+
+    # Checking if the plaintext provided is of type string or ndarray
+    if type(plaintext) == str:
+        hText = np.asarray(strToHexRC4(plaintext))
+        # print("Hex Text\n", hText)
+
+        i = 0
+        j = 0
+        encryptText = []
+        kStream = []
+        for m in range(len(plaintext)):
+            i = (i + 1) % bits
+            j = (j + int(S[i], 16)) % bits
+
+            temp = S[i]
+            S[i] = S[j]
+            S[j] = temp
+
+            t = (int(S[i], 16) + int(S[j], 16)) % bits
+            k = str(S[t])
+            kStream.append(k)
+
+            encryptText.append(hex(int(hText[m], 16) ^ int(k, 16)).upper()[2:])
+
+        # print("k\n", kStream)
+        # print("Encrypt Text\n", encryptText)
+
+        encryptText = hexToStrRC4(encryptText)
+        # print("Encrypt Text String\n", encryptText)
+
+        # Checking if inspect mode is true, if so then the dictionary
+        # is returned otherwise just the encrypted text is returned
+        if inspect_mode:
+            sTable = S
+            ct = encryptText
+            iDict.update({"S-table": sTable})
+            iDict.update({"Ciphertext": ct})
+            return iDict
+        else:
+            return encryptText
+
+    elif type(plaintext) == np.ndarray:
+        imgArray = []
+        # RGB Array
+        if plaintext[0][0].size == 3:
+            imgArray = plaintext
+        # RGB and Alpha Array
+        elif plaintext[0][0].size == 4:
+            imgArray = np.zeros((len(plaintext), len(plaintext[0]), 3))
+            for i in range(len(plaintext)):
+                for j in range(len(plaintext[0])):
+                    imgArray[i][j] = plaintext[i][j][0:3]
+
+        yLength = len(imgArray)
+        xLength = len(imgArray[0])
+
+        sizeImgArray = int(yLength * xLength * 3)
+        imgText = np.array(imgArray, dtype=int)
+        imgText.resize((1, sizeImgArray))
+        # imgText = imgText[0]
+
+        # print(imgArray[0][:25])
+        # print(imgText[0][:25])
+
+        hImg = intToHexRC4(imgText[0])
+        # print("Hex Img\n", hImg[:25])
+
+        i = 0
+        j = 0
+        encryptImgHex = []
+        kStream = []
+        for m in range(sizeImgArray):
+            i = (i + 1) % bits
+            j = (j + int(S[i], 16)) % bits
+
+            temp = S[i]
+            S[i] = S[j]
+            S[j] = temp
+
+            t = (int(S[i], 16) + int(S[j], 16)) % bits
+            k = str(S[t])
+            kStream.append(k)
+
+            encryptImgHex.append(hex(int(hImg[m], 16) ^ int(k, 16)).upper()[2:])
+
+        # print("k\n", kStream[:25])
+        # print("Encrypt Text\n", encryptImgHex[:25])
+
+        encryptImg = np.asarray(hexToIntRC4(encryptImgHex))
+        encryptImg.resize((1, sizeImgArray))
+        encryptImg.resize((yLength, xLength, 3))
+
+        # print("Encrypt Image\n", encryptImg)
+
+        # Checking if inspect mode is true, if so then the dictionary
+        # is returned otherwise just the encrypted images is returned
+        if inspect_mode:
+            sTable = S
+            ct = encryptImg
+            iDict.update({"S-table": sTable})
+            iDict.update({"Ciphertext": ct})
+            return iDict
+        else:
+            return encryptImg
+
+
+def RC4_Decrypt(inspect_mode, ciphertext, key):
+    bits = 256
+    iDict = {}
+    # Creating the initial variables
+    S = []
+    T = []
+    K = list(strToHexRC4(key))
+    # print("S\n", S)
+    # print("T\n", T)
+    # print("K\n", K)
+
+    # Initializing the variables
+    for i in range(bits):
+        S.append(hex(i).upper()[2:].zfill(2))
+        T.append(K[i % len(key)])
+    S = np.asarray(S)
+    T = np.asarray(T)
+    # print("S\n", S)
+    # print("T\n", T)
+
+    # Initial permutation of S
+    j = 0
+    for i in range(bits):
+        j = (j + int(S[i], 16) + int(T[i], 16)) % bits
+        temp = S[i]
+        S[i] = S[j]
+        S[j] = temp
+
+    # print("Decryption S\n", S)
+
+    # Checking if the plaintext provided is of type string or ndarray
+    if type(ciphertext) == str:
+        hText = strToHexRC4(ciphertext)
+        # print("Hex Text\n", hText)
+
+        i = 0
+        j = 0
+        decryptText = []
+        kStream = []
+        for m in range(len(ciphertext)):
+            i = (i + 1) % bits
+            j = (j + int(S[i], 16)) % bits
+
+            temp = S[i]
+            S[i] = S[j]
+            S[j] = temp
+
+            t = (int(S[i], 16) + int(S[j], 16)) % bits
+            k = str(S[t])
+            kStream.append(k)
+
+            decryptText.append(hex(int(hText[m], 16) ^ int(k, 16)).upper()[2:])
+
+        # print("k\n", kStream)
+        # print("Decrypt Text\n", decryptText)
+
+        decryptText = hexToStrRC4(decryptText)
+        # print("Decrypt Text String\n", decryptText)
+
+        # Checking if inspect mode is true, if so then the dictionary
+        # is returned otherwise just the decrypted text is returned
+        if inspect_mode:
+            sTable = np.asarray(S.tolist())
+            pt = decryptText
+            iDict.update({"S-table": sTable})
+            iDict.update({"Plaintext": pt})
+            return iDict
+        else:
+            return decryptText
+
+    elif type(ciphertext) == np.ndarray:
+        imgArray = []
+        # RGB Array
+        if ciphertext[0][0].size == 3:
+            imgArray = ciphertext
+        # RGB and Alpha Array
+        elif ciphertext[0][0].size == 4:
+            imgArray = np.zeros((len(ciphertext), len(ciphertext[0]), 3))
+            for i in range(len(ciphertext)):
+                for j in range(len(ciphertext[0])):
+                    imgArray[i][j] = ciphertext[i][j][0:3]
+
+        yLength = len(imgArray)
+        xLength = len(imgArray[0])
+
+        sizeImgArray = int(yLength * xLength * 3)
+        imgText = np.array(imgArray, dtype=int)
+        imgText.resize((1, sizeImgArray))
+        # imgText = imgText[0]
+
+        # print(imgArray)
+        # print(imgText)
+
+        hImg = intToHexRC4(imgText[0])
+        # print("Hex Img\n", hImg)
+
+        i = 0
+        j = 0
+        decryptImgHex = []
+        kStream = []
+        for m in range(sizeImgArray):
+            i = (i + 1) % bits
+            j = (j + int(S[i], 16)) % bits
+
+            temp = S[i]
+            S[i] = S[j]
+            S[j] = temp
+
+            t = (int(S[i], 16) + int(S[j], 16)) % bits
+            k = str(S[t])
+            kStream.append(k)
+
+            decryptImgHex.append(hex(int(hImg[m], 16) ^ int(k, 16)).upper()[2:])
+
+        # print("k\n", kStream)
+        # print("Encrypt Text\n", encryptText)
+
+        decryptImg = np.asarray(hexToIntRC4(decryptImgHex))
+        decryptImg.resize((1, sizeImgArray))
+        decryptImg.resize((yLength, xLength, 3))
+
+        # print("Encrypt Image\n", encryptImg)
+
+        # Checking if inspect mode is true, if so then the dictionary
+        # is returned otherwise just the decrypted image is returned
+        if inspect_mode:
+            sTable = S
+            pt = decryptImg
+            iDict.update({"S-table": sTable})
+            iDict.update({"Plaintext": pt})
+            return iDict
+        else:
+            return decryptImg
+
+
+# def Testing():
+#     pText = "Testing if the encryption algorithm works properly"
+#     kText = "I am the key"
+#     pImg = Image.open('circuit.png')
+#     inspect = True
+# 
+#     eText = RC4_Encrypt(inspect, pText, kText)
+#     print(eText['S-table'], "\n\n")
+#     print(eText['Ciphertext'], "\n\n")
+#     print(eText, "\n\n")
+# 
+#     if type(eText) == dict:
+#         dText = RC4_Decrypt(inspect, eText["Ciphertext"], kText)
+#     else:
+#         dText = RC4_Decrypt(inspect, eText, kText)
+# 
+#     print(dText['S-table'], "\n\n")
+#     print(dText['Plaintext'], "\n\n")
+# 
+#     # pImg.show()
+#     # npImg = np.array(pImg)
+#     #
+#     # eImg = RC4_Encrypt(inspect, npImg, kText)
+#     # # print(eImg, "\n\n")
+#     #
+#     # if type(eImg) == dict:
+#     #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
+#     # else:
+#     #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg, kText)
+#     #
+#     # # print(dImg, "\n\n")
+#     #
+#     # if type(dImg) == dict:
+#     #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+#     #     pImg.show()
+#     # else:
+#     #     pImg = Image.fromarray((dImg).astype(np.uint8))
+#     #     pImg.show()
+# 
+#     # pImg = Image.open('brain_low.png')
+#     #
+#     # pImg.show()
+#     # npImg = np.array(pImg)
+#     #
+#     # eImg = RC4_Encrypt(inspect, npImg, kText)
+#     # # print(eImg, "\n\n")
+#     #
+#     # if type(eImg) == dict:
+#     #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
+#     # else:
+#     #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg, kText)
+#     #
+#     # # print(dImg, "\n\n")
+#     #
+#     # if type(dImg) == dict:
+#     #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+#     #     pImg.show()
+#     # else:
+#     #     pImg = Image.fromarray((dImg).astype(np.uint8))
+#     #     pImg.show()
+#     #
+#     # pImg = Image.open('starwars.png')
+#     #
+#     # pImg.show()
+#     # npImg = np.array(pImg)
+#     #
+#     # eImg = RC4_Encrypt(inspect, npImg, kText)
+#     # # print(eImg, "\n\n")
+#     #
+#     # if type(eImg) == dict:
+#     #     pImg = Image.fromarray((eImg["Ciphertext"] * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg["Ciphertext"], kText)
+#     # else:
+#     #     pImg = Image.fromarray((eImg * 255).astype(np.uint8))
+#     #     pImg.show()
+#     #     dImg = RC4_Decrypt(inspect, eImg, kText)
+#     #
+#     # # print(dImg, "\n\n")
+#     #
+#     # if type(dImg) == dict:
+#     #     pImg = Image.fromarray((dImg["Plaintext"]).astype(np.uint8))
+#     #     pImg.show()
+#     # else:
+#     #     pImg = Image.fromarray((dImg).astype(np.uint8))
+#     #     pImg.show()
+# 
+# 
+# start = timeit.default_timer()
+# Testing()
+# print("Done in ", timeit.default_timer() - start, "s\n\n")
