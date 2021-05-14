@@ -2,6 +2,7 @@
 import numpy as np
 
 IP = np.load("DES_Initial_Permutation.npy")
+print(IP)
 PC1 = np.load("DES_Permutation_Choice1.npy")
 PC2 = np.load("DES_Permutation_Choice2.npy")
 KeyRoundShifts = np.load("DES_Round_Shifts.npy")
@@ -53,7 +54,7 @@ S_Box = [[[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
          [7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8],
          [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]]]
 
-    # Permutation forafter applying  S Box
+    # Permutation for after applying S Box
 SBox_per = [16, 7, 20, 21,
        29, 12, 28, 17,
        1, 15, 23, 26,
@@ -71,6 +72,7 @@ Inv_IP = [40, 8, 48, 16, 56, 24, 64, 32,
           35, 3, 43, 11, 51, 19, 59, 27,
           34, 2, 42, 10, 50, 18, 58, 26,
           33, 1, 41, 9, 49, 17, 57, 25]
+
 
 HtB = {'0': "0000",
        '1': "0001",
@@ -164,6 +166,11 @@ def To_Hex(Input):
 
     return Output
 
+def To_Str(Input):
+    Output = []
+    for i in range(int(len(Input))):
+        Output.append( chr(int(Input[i],16)))
+    return Output
 
 def C_LeftShift(Input, i):
     Temp = np.roll(Input, -1 * i).tolist()
@@ -231,8 +238,8 @@ def Key_Mutation(key, pc1, pc2, roundshift):
     return Ki_PC2
 
 
-def DES_Encrypt(plaintext, key, ip, inspect_mode):    # Plaintext and key input must be 64 bits in Hex/ ASCII
-    Keys = Key_Mutation(key, PC1, PC2, KeyRoundShifts)
+def DES_Encrypt(plaintext, Keys, ip, inspect_mode):    # Plaintext and key input must be 64 bits in Hex/ ASCII
+    # Keys = Key_Mutation(Keys, PC1, PC2, KeyRoundShifts)
 
 # Add check for size of text
     PT = To_Bits(plaintext)
@@ -301,14 +308,131 @@ def DES_Encrypt(plaintext, key, ip, inspect_mode):    # Plaintext and key input 
     print("DES Encrypt")
 
 
-def DES_Decrypt(plaintext, key, ip):
+def DES_Decrypt(ciphertext, keys, inv_ip, inspect_mode):
+    # keys = Key_Mutation(keys, PC1, PC2, KeyRoundShifts)
 
+    Keys = []
+    for i in range(len(keys)):
+        Keys.append(keys[len(keys)-i-1])
+
+    # Add check for size of text
+    CT = To_Bits(ciphertext)
+
+    # Apply Initial Permutation
+    P_IP = Apply_Per(CT, inv_ip)
+
+    Li = []
+    Ri = []
+
+    Li.append(P_IP[0:32])
+    Ri.append(P_IP[32:])
+
+    for i in range(16):
+        Li.append(Ri[i])
+        F_Function_Out = F_Function(Ri[i], Keys[i])
+        Ri_Temp = XOR(F_Function_Out, Li[i])
+        Ri.append(Ri_Temp)
+
+        # Convert to Hex
+    Li_Hex = []
+    Ri_Hex = []
+    for i in range(len(Li)):
+        L_Temp = ""
+        R_Temp = ""
+        for j in range(int(len(Li[i]) / 4)):
+            L_Temp += Li[i][j * 4] + Li[i][j * 4 + 1] + Li[i][j * 4 + 2] + Li[i][j * 4 + 3]
+            R_Temp += Ri[i][j * 4] + Ri[i][j * 4 + 1] + Ri[i][j * 4 + 2] + Ri[i][j * 4 + 3]
+        Li_Hex.append(To_Hex(L_Temp))
+        Ri_Hex.append(To_Hex(R_Temp))
+
+    Keys_Hex = []
+    for i in range(len(Keys)):
+        T = ""
+        for j in range(len(Keys[i])):
+            T += Keys[i][j]
+        Keys_Hex.append(To_Hex(T))
+
+        # Print round outputs and keys
+    # for i in range(len(Li)-1):
+    #     print("round",i+1, "\tLi:", Li_Hex[i+1], "\tRi:", Ri_Hex[i+1], "\tKey:", Keys_Hex[i])
+
+    if (inspect_mode == True):
+        Rounds = []
+        for i in range(1, len(Li)):
+            Tl = Li_Hex[i]
+            Tl += Ri_Hex[i]
+            Rounds.append(Tl)
+
+    TL = Li[16]
+    TR = Ri[16]
+    # Left and right swap for final permutation
+    TR.extend(TL)
+    # Apply final permutation
+    CText = Apply_Per(TR, Inv_IP)
+    Final_B = ""
+    for i in range(len(CText)):
+        Final_B += CText[i]
+    CText = To_Hex(Final_B)
+
+    if (inspect_mode == True):
+        Out = {"ROutputs": Rounds, "Plaintext": CText}
+        return Out
+    else:
+        return CText
 
     print("DES Decrypt")
 
 
 def TDEA_Encrypt(inspect_mode, plaintext, key1, key2, key3, ip):
+    if (isinstance(plaintext, str) == True):
+        print("plaintext is string")
 
+
+        Keys1 = Key_Mutation(key1, PC1, PC2, KeyRoundShifts)
+        Keys2 = Key_Mutation(key2, PC1, PC2, KeyRoundShifts)
+        Keys3 = Key_Mutation(key3, PC1, PC2, KeyRoundShifts)
+
+            # convert string to hex string
+        Hex = plaintext.encode("ASCII")
+        Hex = bytes.hex(Hex)
+        print("Hex:",Hex)
+        PT_Groupings = []
+        T = ""
+        print("Length:", len(Hex))
+        if (len(Hex) % 16 != 0):
+            Append = len(Hex) % 16
+            for i in range(16 - Append):
+                Hex += "0"
+
+        for i in range(0,len(Hex),16):
+            T = ""
+            for j in range(16):
+                T += Hex[i + j]
+            PT_Groupings.append(T)
+
+        Encrypted = ""
+
+        for Grouping in range(len(PT_Groupings)):
+            print("Grouping:", PT_Groupings[Grouping])
+            CT1 = DES_Encrypt(PT_Groupings[Grouping], Keys1, ip, False)
+            print("Ciphertext1:",CT1)
+            CT2 = DES_Decrypt(CT1, Keys2, ip, False)
+            print("Ciphertext2:",CT2)
+            CT3 = DES_Encrypt(CT2, Keys3, ip, False)
+            print("Ciphertext3:",CT3)
+            Encrypted += CT3
+
+        print("Encrypted:",Encrypted)
+        # BT = bytes.fromhex(Encrypted).decode()
+        # a = Encrypted.decode("hex")
+        # print(BT)
+        # print("String:",BT[2])
+
+        BT = To_Str(Encrypted)
+        print("String:",BT)
+
+    else:
+        print("plaintext is nd-array")
 
     print("3DES encrypt")
 
@@ -322,9 +446,25 @@ def TDEA_Decrypt(inspect_mode, plaintext, key1, key2, key3, inv_ip):
 
 Plaintext = "02468aceeca86420"
 Key1_init = "0f1571c947d9e859"
+Key2_init = "1aa15236cd10a2bd"
+Key3_init = "59e6fd3ca1b57cc6"
 
-Plantext = "Testing1"
-Key1_init ="Encrypt1"
+Plaintext = "Testingab"
+# Key1_init ="Encrypt1"
 
-CT = DES_Encrypt(Plaintext, Key1_init, IP, False)
-print(CT)
+CT = TDEA_Encrypt(False,Plaintext,Key1_init, Key2_init, Key3_init, IP)
+
+# CT = DES_Encrypt(Plaintext, Key1_init, IP, False)
+# print("Ciphertext:",CT)
+# CT = DES_Decrypt(CT, Key2_init, IP, False)
+# print("Ciphertext:",CT)
+# CT = DES_Encrypt(CT, Key3_init, IP, False)
+# print("Ciphertext:",CT)
+# print()
+# PT = DES_Decrypt(CT,Key3_init, IP, False)
+# print("Plaintext:",PT)
+# PT = DES_Encrypt(PT,Key2_init, IP, False)
+# print("Plaintext:",PT)
+# PT = DES_Decrypt(PT,Key1_init, IP, False)
+# print("Plaintext:",PT)
+
