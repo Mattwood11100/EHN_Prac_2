@@ -1,8 +1,12 @@
 
 import numpy as np
+from PIL import Image
+import time
+
+start_time = time.time()
 
 IP = np.load("DES_Initial_Permutation.npy")
-print(IP)
+Inv_IP = np.load('DES_Inverse_Initial_Permutation.npy')
 PC1 = np.load("DES_Permutation_Choice1.npy")
 PC2 = np.load("DES_Permutation_Choice2.npy")
 KeyRoundShifts = np.load("DES_Round_Shifts.npy")
@@ -63,15 +67,6 @@ SBox_per = [16, 7, 20, 21,
        32, 27, 3, 9,
        19, 13, 30, 6,
        22, 11, 4, 25]
-
-Inv_IP = [40, 8, 48, 16, 56, 24, 64, 32,
-          39, 7, 47, 15, 55, 23, 63, 31,
-          38, 6, 46, 14, 54, 22, 62, 30,
-          37, 5, 45, 13, 53, 21, 61, 29,
-          36, 4, 44, 12, 52, 20, 60, 28,
-          35, 3, 43, 11, 51, 19, 59, 27,
-          34, 2, 42, 10, 50, 18, 58, 26,
-          33, 1, 41, 9, 49, 17, 57, 25]
 
 
 HtB = {'0': "0000",
@@ -168,9 +163,50 @@ def To_Hex(Input):
 
 def To_Str(Input):
     Output = []
-    for i in range(int(len(Input))):
-        Output.append( chr(int(Input[i],16)))
-    return Output
+    for i in range(int(len(Input)/2)):
+        left = Input[i*2]
+        right = Input[i*2+1]
+        Output.append( chr(int(left+right,16)))
+
+    return ''.join(Output)
+
+def Str_To_Hex(Input):
+    Hex = ""
+
+    for i in range(len(Input)):
+        T = hex(ord(Input[i]))[2::]
+
+        if (len(T) == 1):
+            Hex += '0' + T[0]
+        elif (len(T) == 0) :
+            Hex += '00'
+        else:
+            Hex += T
+    return Hex
+
+
+def Int_To_Hex(Input):
+    Hex = ""
+
+    for i in range(len(Input)):
+        T = hex(int(Input[i]))[2::]
+
+        if (len(T) == 1):
+            Hex += '0' + T[0]
+        elif (len(T) == 0):
+            Hex += '00'
+        else:
+            Hex += T
+    return Hex
+
+
+def Hex_To_Int(Input):
+    Int = []
+    for i in range(int(len(Input)/2)):
+        T = Input[2*i] + Input[2*i + 1]
+        Int.append(int(T,16))
+    return Int
+
 
 def C_LeftShift(Input, i):
     Temp = np.roll(Input, -1 * i).tolist()
@@ -210,8 +246,6 @@ def F_Function(Ri, Ki):
 
     return S_Per
 
-    print("F Function")
-
 
 def Key_Mutation(key, pc1, pc2, roundshift):
         # Return array with keys [0..15]
@@ -239,9 +273,7 @@ def Key_Mutation(key, pc1, pc2, roundshift):
 
 
 def DES_Encrypt(plaintext, Keys, ip, inspect_mode):    # Plaintext and key input must be 64 bits in Hex/ ASCII
-    # Keys = Key_Mutation(Keys, PC1, PC2, KeyRoundShifts)
 
-# Add check for size of text
     PT = To_Bits(plaintext)
 
         # Apply Initial Permutation
@@ -278,10 +310,6 @@ def DES_Encrypt(plaintext, Keys, ip, inspect_mode):    # Plaintext and key input
             T += Keys[i][j]
         Keys_Hex.append(To_Hex(T))
 
-        # Print round outputs and keys
-    # for i in range(len(Li)-1):
-    #     print("round",i+1, "\tLi:", Li_Hex[i+1], "\tRi:", Ri_Hex[i+1], "\tKey:", Keys_Hex[i])
-
     if (inspect_mode == True):
         Rounds = []
         for i in range(1,len(Li)):
@@ -305,7 +333,6 @@ def DES_Encrypt(plaintext, Keys, ip, inspect_mode):    # Plaintext and key input
         return Out
     else:
         return CText
-    print("DES Encrypt")
 
 
 def DES_Decrypt(ciphertext, keys, inv_ip, inspect_mode):
@@ -316,10 +343,10 @@ def DES_Decrypt(ciphertext, keys, inv_ip, inspect_mode):
         Keys.append(keys[len(keys)-i-1])
 
     # Add check for size of text
-    CT = To_Bits(ciphertext)
+    CT_Bits = To_Bits(ciphertext)
 
     # Apply Initial Permutation
-    P_IP = Apply_Per(CT, inv_ip)
+    P_IP = Apply_Per(CT_Bits, IP)
 
     Li = []
     Ri = []
@@ -352,10 +379,6 @@ def DES_Decrypt(ciphertext, keys, inv_ip, inspect_mode):
             T += Keys[i][j]
         Keys_Hex.append(To_Hex(T))
 
-        # Print round outputs and keys
-    # for i in range(len(Li)-1):
-    #     print("round",i+1, "\tLi:", Li_Hex[i+1], "\tRi:", Ri_Hex[i+1], "\tKey:", Keys_Hex[i])
-
     if (inspect_mode == True):
         Rounds = []
         for i in range(1, len(Li)):
@@ -380,25 +403,23 @@ def DES_Decrypt(ciphertext, keys, inv_ip, inspect_mode):
     else:
         return CText
 
-    print("DES Decrypt")
-
 
 def TDEA_Encrypt(inspect_mode, plaintext, key1, key2, key3, ip):
+    Key1 = Str_To_Hex(key1)
+    Key2 = Str_To_Hex(key2)
+    Key3 = Str_To_Hex(key3)
+
+    Keys1 = Key_Mutation(Key1, PC1, PC2, KeyRoundShifts)
+    Keys2 = Key_Mutation(Key2, PC1, PC2, KeyRoundShifts)
+    Keys3 = Key_Mutation(Key3, PC1, PC2, KeyRoundShifts)
+
     if (isinstance(plaintext, str) == True):
-        print("plaintext is string")
-
-
-        Keys1 = Key_Mutation(key1, PC1, PC2, KeyRoundShifts)
-        Keys2 = Key_Mutation(key2, PC1, PC2, KeyRoundShifts)
-        Keys3 = Key_Mutation(key3, PC1, PC2, KeyRoundShifts)
 
             # convert string to hex string
-        Hex = plaintext.encode("ASCII")
-        Hex = bytes.hex(Hex)
-        print("Hex:",Hex)
+        Hex = Str_To_Hex(plaintext)
+
         PT_Groupings = []
         T = ""
-        print("Length:", len(Hex))
         if (len(Hex) % 16 != 0):
             Append = len(Hex) % 16
             for i in range(16 - Append):
@@ -411,49 +432,291 @@ def TDEA_Encrypt(inspect_mode, plaintext, key1, key2, key3, ip):
             PT_Groupings.append(T)
 
         Encrypted = ""
+        if (inspect_mode == False):
+            for Grouping in range(len(PT_Groupings)):
+                CT1 = DES_Encrypt(PT_Groupings[Grouping], Keys1, ip, inspect_mode)
+                CT2 = DES_Decrypt(CT1, Keys2, Inv_IP, inspect_mode)
+                CT3 = DES_Encrypt(CT2, Keys3, ip, inspect_mode)
+                Encrypted += CT3
 
-        for Grouping in range(len(PT_Groupings)):
-            print("Grouping:", PT_Groupings[Grouping])
-            CT1 = DES_Encrypt(PT_Groupings[Grouping], Keys1, ip, False)
-            print("Ciphertext1:",CT1)
-            CT2 = DES_Decrypt(CT1, Keys2, ip, False)
-            print("Ciphertext2:",CT2)
-            CT3 = DES_Encrypt(CT2, Keys3, ip, False)
-            print("Ciphertext3:",CT3)
-            Encrypted += CT3
+            # print("Encrypted:",Encrypted)
+            BT = To_Str(Encrypted)
 
-        print("Encrypted:",Encrypted)
-        # BT = bytes.fromhex(Encrypted).decode()
-        # a = Encrypted.decode("hex")
-        # print(BT)
-        # print("String:",BT[2])
+            return BT
 
-        BT = To_Str(Encrypted)
-        print("String:",BT)
+        else:
+            for Grouping in range(len(PT_Groupings)):
+                CT1 = DES_Encrypt(PT_Groupings[Grouping], Keys1, ip, inspect_mode)
+                CT2 = DES_Decrypt(CT1["Ciphertext"], Keys2, Inv_IP, inspect_mode)
+                CT3 = DES_Encrypt(CT2["Plaintext"], Keys3, ip, inspect_mode)
+                Encrypted += CT3["Ciphertext"]
+
+            BT = To_Str(Encrypted)
+
+            Inspect_Output = {'DES1_Outputs': CT1['ROutputs'],
+                              'DES2_Outputs': CT2['ROutputs'],
+                              'DES3_Outputs': CT3['ROutputs'],
+                              'Ciphertext': BT}
+            return Inspect_Output
+
+            return BT
 
     else:
-        print("plaintext is nd-array")
+        try:
+            ndArray_Size = plaintext[0][0].size
+        except:
+            raise Exception("nd-array format not supported")
+
+        if (ndArray_Size == 3):  # Alpha not included
+            array = plaintext
+
+        elif (ndArray_Size == 4):  # Alpha included
+            # Exclude Alpha values.
+            array = np.zeros((len(plaintext), len(plaintext[0]), 3))
+            for i in range(len(plaintext)):
+                for j in range(len(plaintext[0])):
+                    array[i][j] = plaintext[i][j][0:3]
+
+        else:  # Not RGB image
+            raise Exception("nd-array is not an RGB image array")
+
+        # Resize to 2d array of size (n x sqrt(Range))
+            # Used to return array to correct shape
+        y_axis = len(array)
+        x_axis = len(array[0])
+
+        P = array
+
+        size = int(y_axis * x_axis * 3)
+        P.resize((1, size))
+
+        PT_Groupings = []
+        print(P)
+        Append = 0
+        if (len(P[0]) % 8 != 0):
+            Append = len(P[0]) % 8
+            print(Append)
+            for i in range(8 - Append):
+                P = np.append(P,0)
+
+        if (Append == 0):
+            P = P[0]
+        for i in range(0, len(P), 8):
+            T = []
+            for j in range(8):
+                T.append(P[i + j])
+            PT_Groupings.append(T)
+        print(PT_Groupings)
+
+        Encrypted = []
+        if (inspect_mode == False):
+            print(len(PT_Groupings))
+            for Grouping in range(len(PT_Groupings)):
+                Group = Int_To_Hex(PT_Groupings[Grouping])
+                CT1 = DES_Encrypt(Group, Keys1, ip, inspect_mode)
+                CT2 = DES_Decrypt(CT1, Keys2, Inv_IP, inspect_mode)
+                CT3 = DES_Encrypt(CT2, Keys3, ip, inspect_mode)
+                Encrypted += CT3
+            print("--- %s seconds ---" % (time.time() - start_time))
+
+            # print("Encrypted:",Encrypted)
+            BT = Hex_To_Int(Encrypted)
+
+            Out = np.asarray(BT)
+            Out.resize((y_axis, x_axis, 3))
+            Out = np.uint8(Out)
+
+            return Out
+        else:
+            raise Exception("Inspect mode not implemented for nd-array plaintext")
+
 
     print("3DES encrypt")
 
 
 def TDEA_Decrypt(inspect_mode, plaintext, key1, key2, key3, inv_ip):
+    Key1 = Str_To_Hex(key1)
+    Key2 = Str_To_Hex(key2)
+    Key3 = Str_To_Hex(key3)
 
+    Keys1 = Key_Mutation(Key1, PC1, PC2, KeyRoundShifts)
+    Keys2 = Key_Mutation(Key2, PC1, PC2, KeyRoundShifts)
+    Keys3 = Key_Mutation(Key3, PC1, PC2, KeyRoundShifts)
+
+    if (isinstance(plaintext, str) == True):
+
+
+            # convert string to hex string
+        Hex = Str_To_Hex(plaintext)
+        PT_Groupings = []
+        T = ""
+        if (len(Hex) % 16 != 0):
+            Append = len(Hex) % 16
+            for i in range(16 - Append):
+                Hex += "0"
+
+        for i in range(0,len(Hex),16):
+            T = ""
+            for j in range(16):
+                T += Hex[i + j]
+            PT_Groupings.append(T)
+
+        Decrypted = ""
+        if (inspect_mode == False):
+            for Grouping in range(len(PT_Groupings)):
+                CT1 = DES_Decrypt(PT_Groupings[Grouping], Keys3, inv_ip, inspect_mode)
+                CT2 = DES_Encrypt(CT1, Keys2, IP, inspect_mode)
+                CT3 = DES_Decrypt(CT2, Keys1, inv_ip, inspect_mode)
+                Decrypted += CT3
+
+            # print("Decrypted:",Decrypted)
+
+            BT = To_Str(Decrypted)
+
+            return BT
+
+        else:
+            for Grouping in range(len(PT_Groupings)):
+                CT1 = DES_Decrypt(PT_Groupings[Grouping], Keys3, inv_ip, inspect_mode)
+                CT2 = DES_Encrypt(CT1["Plaintext"], Keys2, IP, inspect_mode)
+                CT3 = DES_Decrypt(CT2["Ciphertext"], Keys1, inv_ip, inspect_mode)
+                Decrypted += CT3["Plaintext"]
+
+            BT = To_Str(Decrypted)
+
+            Inspect_Output = {'DES1_Outputs': CT1['ROutputs'],
+                              'DES2_Outputs': CT2['ROutputs'],
+                              'DES3_Outputs': CT3['ROutputs'],
+                              'Plaintext': BT}
+            return Inspect_Output
+
+            return BT
+
+    else:
+        try:
+            ndArray_Size = plaintext[0][0].size
+        except:
+            raise Exception("nd-array format not supported")
+
+        if (ndArray_Size == 3):  # Alpha not included
+            array = plaintext
+
+        elif (ndArray_Size == 4):  # Alpha included
+            # Exclude Alpha values.
+            array = np.zeros((len(plaintext), len(plaintext[0]), 3))
+            for i in range(len(plaintext)):
+                for j in range(len(plaintext[0])):
+                    array[i][j] = plaintext[i][j][0:3]
+
+        else:  # Not RGB image
+            raise Exception("nd-array is not an RGB image array")
+
+        # Resize to 2d array of size (n x sqrt(Range))
+            # Used to return array to correct shape
+        y_axis = len(array)
+        x_axis = len(array[0])
+
+        P = array
+
+        size = int(y_axis * x_axis * 3)
+        P.resize((1, size))
+        print("Y:X",y_axis,":",x_axis, size)
+        PT_Groupings = []
+
+        Append = 0
+        if (len(P[0]) % 8 != 0):
+            Append = len(P[0]) % 8
+            print(Append)
+            for i in range(8 - Append):
+                P = np.append(P,0)
+
+        if (Append == 0):
+            P = P[0]
+        for i in range(0, len(P), 8):
+            T = []
+            for j in range(8):
+                T.append(P[i + j])
+            PT_Groupings.append(T)
+        print(PT_Groupings)
+
+        Decrypted = []
+        if (inspect_mode == False):
+            print(len(PT_Groupings))
+            for Grouping in range(len(PT_Groupings)):
+                Group = Int_To_Hex(PT_Groupings[Grouping])
+                CT1 = DES_Decrypt(Group, Keys3, Inv_IP, inspect_mode)
+                CT2 = DES_Encrypt(CT1, Keys2, IP, inspect_mode)
+                CT3 = DES_Decrypt(CT2, Keys1, Inv_IP, inspect_mode)
+                Decrypted += CT3
+
+            print("--- %s seconds ---" % (time.time() - start_time))
+
+            # print("Encrypted:",Encrypted)
+            BT = Hex_To_Int(Decrypted)
+
+            Out = np.asarray(BT)
+            Out.resize((y_axis,x_axis,3))
+            Out = np.uint8(Out)
+            return Out
+        else:
+            raise Exception("Inspect mode not implemented for nd-array plaintext")
+        print("plaintext is nd-array")
 
     print("3DES decrypt")
 
 
 
 Plaintext = "02468aceeca86420"
-Key1_init = "0f1571c947d9e859"
-Key2_init = "1aa15236cd10a2bd"
-Key3_init = "59e6fd3ca1b57cc6"
+# Key1_init = "0f1571c9"
+Key1_init = "0f1571c9"
+Key2_init = "1aa15236"
+Key3_init = "59e6fd3c"
 
-Plaintext = "Testingab"
+Plaintext = "Encrypt This message"
 # Key1_init ="Encrypt1"
 
-CT = TDEA_Encrypt(False,Plaintext,Key1_init, Key2_init, Key3_init, IP)
+inspect = False
+if inspect == False:
+    print('Encrypting.......')
+    print()
+    CT = TDEA_Encrypt(False,Plaintext,Key1_init, Key2_init, Key3_init, IP)
+    print('encrypted:',CT)
+    print()
+    print('Decrypting.......')
+    print()
+    PT = TDEA_Decrypt(False,CT,Key1_init, Key2_init, Key3_init, Inv_IP)
+    print('decrypted:',PT)
 
+else:
+    Plaintext = "Testing"
+    print('Inspect Encrypting.......')
+    print()
+    CT = TDEA_Encrypt(True, Plaintext, Key1_init, Key2_init, Key3_init, IP)
+    print('encrypted:', CT)
+    print()
+    print('Decrypting.......')
+    print()
+    PT = TDEA_Decrypt(True, CT["Ciphertext"], Key1_init, Key2_init, Key3_init, Inv_IP)
+    print('decrypted:', PT)
+
+
+pic = Image.open("img1_Low.png", mode='r')
+pix = np.array(pic)
+# print(pix)
+Encrypted_Image = TDEA_Encrypt(False, pix, Key1_init, Key2_init, Key3_init, IP)
+#
+original = Image.fromarray(np.uint8(Encrypted_Image))
+# original.save('Original.png')
+original.save("Encrypted.png")
+original.show()
+pix = np.asarray(Encrypted_Image)
+# pic = Image.open("img2_Low.png", mode='r')
+pix = np.array(Encrypted_Image)
+Decrypted_Image = TDEA_Decrypt(False, pix, Key1_init, Key2_init, Key3_init, Inv_IP)
+
+original = Image.fromarray(np.uint8(Decrypted_Image))
+original.save("Decrypted.png")
+original.show()
 # CT = DES_Encrypt(Plaintext, Key1_init, IP, False)
 # print("Ciphertext:",CT)
 # CT = DES_Decrypt(CT, Key2_init, IP, False)
