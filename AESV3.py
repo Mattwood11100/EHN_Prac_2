@@ -4,7 +4,7 @@ import random
 from timeit import default_timer
 from datetime import datetime
 
-np.set_printoptions(precision=4, suppress=False, threshold=100000)
+np.set_printoptions(precision=4, suppress=False, threshold=100000, linewidth=3000)
 
 
 # Class for the Initial Vector for the CBC. If the vector provided is
@@ -727,27 +727,16 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
 
 # Testing function
 def Testing():
-    inspect = False
+    inspect = True
     ivCBCProvided = True
-    doImages = True
+    doImages = False
     imageToDo = "imgList"
     Images = {
-        "imgList": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low', 'circuit',
-                    'brain_low',
-                    'brain', 'starwars_low', 'starwars'],
-
-        "imgListLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low',
-                       'brain_low',
-                       'starwars_low'],
-
-        "imgListLowOnly": ['circuit_low', 'brain_low', 'starwars_low'],
-
-        "imgListLarge": ['circuit', 'brain', 'starwars']}
-
+        "imgList": ['cat_low', 'cape_low']}
     if not inspect:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = "Testing5789218"
+        kText = "Secret Key #@! 123456"
         start = default_timer()
         if not ivCBCProvided:
 
@@ -837,14 +826,14 @@ def Testing():
                             f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
     else:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = "123#@!Teet!@#321"
+        kText = "Secret Key #@! 123456"
         start = default_timer()
 
         if not ivCBCProvided:
 
             eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
-            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+            # print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
 
             if default_timer() - start > 60:
                 print(
@@ -856,8 +845,7 @@ def Testing():
 
             dText = AES_Decrypt(inspect, eText['Ciphertext'], None, kText,
                                 np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(f""
-                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+            # print(f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
 
             if default_timer() - start > 60:
                 print(
@@ -869,7 +857,8 @@ def Testing():
         else:
 
             eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+            # print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+            print(f"Encryption\nCiphertext:\n{eText['Ciphertext']}")
 
             if default_timer() - start > 60:
                 print(
@@ -881,8 +870,8 @@ def Testing():
 
             dText = AES_Decrypt(inspect, eText['Ciphertext'], np.load('AES_CBC_IV.npy'), kText,
                                 np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(f""
-                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+            # print(f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+            print(f"\nDecryption\nPlaintext:\n{dText['Plaintext']}")
 
             if default_timer() - start > 60:
                 print(
