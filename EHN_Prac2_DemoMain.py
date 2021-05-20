@@ -40,23 +40,14 @@ def Testing():
     ivCBCProvided = True
     doImages = True
     imageToDo = "imgList"
-    Images = {
-        "imgList": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low', 'circuit',
-                    'brain_low',
-                    'brain', 'starwars_low', 'starwars'],
-
-        "imgListLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low',
-                       'brain_low',
-                       'starwars_low'],
-
-        "imgListLowOnly": ['circuit_low', 'brain_low', 'starwars_low'],
-
-        "imgListLarge": ['circuit', 'brain', 'starwars']}
+    Images = {"imgList": ['cat_low', 'cape_low']}
 
     if not inspect:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = Plaintext
+        kText = Key1_init
+        # kText = Key2_init
+        # kText = Key3_init
         start = default_timer()
         if not ivCBCProvided:
 
@@ -146,8 +137,10 @@ def Testing():
                             f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
     else:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = Plaintext
+        kText = Key1_init
+        # kText = Key2_init
+        # kText = Key3_init
         start = default_timer()
 
         if not ivCBCProvided:
@@ -310,27 +303,14 @@ def Testing():
     inspect = False
     doImages = True
     imageToDo = "imgList"
-    Images = {
-        "imgList": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low', 'circuit',
-                    'brain_low',
-                    'brain', 'starwars_low', 'starwars'],
-
-        "imgListLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low',
-                       'brain_low',
-                       'starwars_low'],
-
-        "imgListLowLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small'],
-
-        "imgListLowOnly": ['circuit_low', 'brain_low', 'starwars_low'],
-
-        "circuit": ['circuit'],
-
-        "imgListLarge": ['circuit', 'brain', 'starwars']}
+    Images = {"imgList": ['cat_low', 'cape_low']}
 
     if not inspect:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = Plaintext
+        kText = Key1_init
+        # kText = Key2_init
+        # kText = Key3_init
         start = default_timer()
 
         eText = RC4_Encrypt(inspect, pText, kText)
@@ -393,8 +373,10 @@ def Testing():
                         f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
     else:
 
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
+        pText = Plaintext
+        kText = Key1_init
+        # kText = Key2_init
+        # kText = Key3_init
         start = default_timer()
 
         eText = RC4_Encrypt(inspect, pText, kText)
