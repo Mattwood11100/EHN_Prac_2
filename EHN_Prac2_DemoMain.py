@@ -38,7 +38,7 @@ print("===============================")
 def Testing():
     inspect = False
     ivCBCProvided = True
-    doImages = True
+    doImages = False
     imageToDo = "imgList"
     Images = {"imgList": ['cat_low', 'cape_low']}
 
@@ -106,13 +106,15 @@ def Testing():
 
                     pImg = Image.open(i + '.png')
                     pImg.show()
-                    pImg.save(f"AES_Images/{i}_original.png")
+                    # pImg.save(f"{i}_original.png")
                     npImg = np.array(pImg)
-                    kText = "I am the key"
+                    kText = Key1_init
+                    # kText = Key2_init
+                    # kText = Key3_init = "I am the key"
 
                     eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
                     eImg.show()
-                    eImg.save(f"AES_Images/{i}_encrypted.png")
+                    # eImg.save(f"{i}_encrypted.png")
                     eImg = np.array(eImg)
 
                     if default_timer() - start > 60:
@@ -127,7 +129,7 @@ def Testing():
                     dImg = AES_Decrypt(inspect, eImg, np.load('AES_CBC_IV.npy'), kText,
                                        np.load('AES_Inverse_Sbox_lookup.npy'))
                     dImg.show()
-                    dImg.save(f"AES_Images/{i}_decrypted.png")
+                    # dImg.save(f"{i}_decrypted.png")
 
                     if default_timer() - start > 60:
                         print(
@@ -202,12 +204,14 @@ def Testing():
                     pImg = Image.open(i + '.png')
                     pImg.show()
                     npImg = np.array(pImg)
-                    kText = "I am the key"
+                    kText = Key1_init
+                    # kText = Key2_init
+                    # kText = Key3_init
 
                     eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
                     print(f"States:\n{eImg['States']}")
                     eImg['Ciphertext'].show()
-                    eImg['Ciphertext'].save(f"{i}_encrypted.png")
+                    # eImg['Ciphertext'].save(f"{i}_encrypted.png")
                     eImg['Ciphertext'] = np.array(eImg)
 
                     if default_timer() - start > 60:
@@ -223,7 +227,7 @@ def Testing():
                                        np.load('AES_Inverse_Sbox_lookup.npy'))
                     print(f"States:\n{dImg['States']}")
                     dImg['Plaintext'].show()
-                    dImg['Plaintext'].save(f"{i}_encrypted.png")
+                    # dImg['Plaintext'].save(f"{i}_encrypted.png")
 
                     if default_timer() - start > 60:
                         print(
@@ -242,209 +246,215 @@ else:
     print(f"Finally finished in {default_timer() - start} seconds a"
           f"t {datetime.now().strftime('%H:%M:%S')}\n\n")
 
-# =====================================================
-# 3DES Testing
-print("================================")
-print("==============3DES==============")
-print("================================")
-inspect = False
-if inspect == False:
-    print('Encrypting.......')
-    print()
-    CT = TDEA_Encrypt(False, Plaintext, Key1_init, Key2_init, Key3_init, IP)
-    print(CT)
-    print()
-    print('Decrypting.......')
-    print()
-    PT = TDEA_Decrypt(False, CT, Key1_init, Key2_init, Key3_init, Inv_IP)
-    print(PT)
 
-else:
-    Plaintext = "Testing"
-    print('Inspect Encrypting.......')
-    print()
-    CT = TDEA_Encrypt(True, Plaintext, Key1_init, Key2_init, Key3_init, IP)
-    print('encrypted:', CT)
-    print()
-    print('Decrypting.......')
-    print()
-    PT = TDEA_Decrypt(True, CT["Ciphertext"], Key1_init, Key2_init, Key3_init, Inv_IP)
-    print('decrypted:', PT)
-
-pic = Image.open("cape_low.png", mode='r')
-pix = np.array(pic)
-# print(pix)
-Encrypted_Image = TDEA_Encrypt(False, pix, Key1_init, Key2_init, Key3_init, IP)
-
-print("--- %s seconds ---" % (time.time() - start_time))
 #
-original = Image.fromarray(np.uint8(Encrypted_Image))
-# original.save('Original.png')
-original.save("Encrypted.png")
-original.show()
-pix = np.asarray(Encrypted_Image)
-# pic = Image.open("img2_Low.png", mode='r')
-pix = np.array(Encrypted_Image)
-Decrypted_Image = TDEA_Decrypt(False, pix, Key1_init, Key2_init, Key3_init, Inv_IP)
-
-print("--- %s seconds ---" % (time.time() - start_time))
-
-original = Image.fromarray(np.uint8(Decrypted_Image))
-original.save("Decrypted.png")
-original.show()
-
-# =====================================================
-print("===============================")
-print("==============RC4==============")
-print("===============================")
-
-
-def Testing():
-    inspect = False
-    doImages = True
-    imageToDo = "imgList"
-    Images = {"imgList": ['cat_low', 'cape_low']}
-
-    if not inspect:
-
-        pText = Plaintext
-        kText = Key1_init
-        # kText = Key2_init
-        # kText = Key3_init
-        start = default_timer()
-
-        eText = RC4_Encrypt(inspect, pText, kText)
-        print(f"Encryption\nCiphertext:\n{eText}")
-
-        if default_timer() - start > 60:
-            print(
-                f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-        else:
-            print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-        start = default_timer()
-
-        dText = RC4_Decrypt(inspect, eText, kText)
-        print(f""
-              f"\nDecryption\nPlaintext:\n{dText}")
-
-        if default_timer() - start > 60:
-            print(
-                f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-        else:
-            print(
-                f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-        if doImages:
-
-            for i in Images[imageToDo]:
-                print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
-                start = default_timer()
-
-                pImg = Image.open(i + '.png')
-                pImg.show()
-                pImg.save(f"RC4_Images/{i}_original.png")
-                npImg = np.array(pImg)
-                kText = "I am the key"
-
-                eImg = RC4_Encrypt(inspect, npImg, kText)
-                eImg.show()
-                eImg.save(f"RC4_Images/{i}_encrypted.png")
-                eImg = np.array(eImg)
-
-                if default_timer() - start > 60:
-                    print(
-                        f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-                else:
-                    print(
-                        f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-                start = default_timer()
-
-                dImg = RC4_Decrypt(inspect, eImg, kText)
-                dImg.show()
-                dImg.save(f"RC4_Images/{i}_decrypted.png")
-
-                if default_timer() - start > 60:
-                    print(
-                        f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-                else:
-                    print(
-                        f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-    else:
-
-        pText = Plaintext
-        kText = Key1_init
-        # kText = Key2_init
-        # kText = Key3_init
-        start = default_timer()
-
-        eText = RC4_Encrypt(inspect, pText, kText)
-        print(f"Encryption\nS-table:\n{eText['S-table']}\nCiphertext:\n{eText['Ciphertext']}")
-
-        if default_timer() - start > 60:
-            print(
-                f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-        else:
-            print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-        start = default_timer()
-
-        dText = RC4_Decrypt(inspect, eText['Ciphertext'], kText)
-        print(f"\nDecryption\nS-table:\n{dText['S-table']}\nPlaintext:\n{dText['Plaintext']}")
-
-        if default_timer() - start > 60:
-            print(
-                f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-        else:
-            print(
-                f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-        if doImages:
-
-            for i in Images[imageToDo]:
-                print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
-                start = default_timer()
-
-                pImg = Image.open(i + '.png')
-                pImg.show()
-                pImg.save(f"RC4_Images/{i}_original.png")
-                npImg = np.array(pImg)
-                kText = "I am the key"
-
-                eImg = RC4_Encrypt(inspect, npImg, kText)
-                print(f"S-table:\n{eImg['S-table']}")
-                eImg['Ciphertext'].show()
-                eImg['Ciphertext'].save(f"RC4_Images/{i}_encrypted.png")
-                eImg['Ciphertext'] = np.array(eImg['Ciphertext'])
-
-                if default_timer() - start > 60:
-                    print(
-                        f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-                else:
-                    print(
-                        f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-                start = default_timer()
-
-                dImg = RC4_Decrypt(inspect, eImg['Ciphertext'], kText)
-                print(f"S-table:\n{dImg['S-table']}")
-                dImg['Plaintext'].show()
-                dImg['Plaintext'].save(f"RC4_Images/{i}_decrypted.png")
-
-                if default_timer() - start > 60:
-                    print(
-                        f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-                else:
-                    print(
-                        f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-
-start = default_timer()
-Testing()
-if default_timer() - start > 60:
-    print(f"Finally finished in {(default_timer() - start) / 60} minutes at"
-          f" {datetime.now().strftime('%H:%M:%S')}\n\n")
-else:
-    print(f"Finally finished in {default_timer() - start} seconds a"
-          f"t {datetime.now().strftime('%H:%M:%S')}\n\n")
+# # =====================================================
+# # 3DES Testing
+# print("================================")
+# print("==============3DES==============")
+# print("================================")
+# inspect = False
+# if inspect == False:
+#     print('Encrypting.......')
+#     print()
+#     CT = TDEA_Encrypt(False, Plaintext, Key1_init, Key2_init, Key3_init, IP)
+#     print(CT)
+#     print()
+#     print('Decrypting.......')
+#     print()
+#     PT = TDEA_Decrypt(False, CT, Key1_init, Key2_init, Key3_init, Inv_IP)
+#     print(PT)
+#
+# else:
+#     Plaintext = "Testing"
+#     print('Inspect Encrypting.......')
+#     print()
+#     CT = TDEA_Encrypt(True, Plaintext, Key1_init, Key2_init, Key3_init, IP)
+#     print('encrypted:', CT)
+#     print()
+#     print('Decrypting.......')
+#     print()
+#     PT = TDEA_Decrypt(True, CT["Ciphertext"], Key1_init, Key2_init, Key3_init, Inv_IP)
+#     print('decrypted:', PT)
+#
+# pic = Image.open("cape_low.png", mode='r')
+# pix = np.array(pic)
+# # print(pix)
+# Encrypted_Image = TDEA_Encrypt(False, pix, Key1_init, Key2_init, Key3_init, IP)
+#
+# print("--- %s seconds ---" % (time.time() - start_time))
+# #
+# original = Image.fromarray(np.uint8(Encrypted_Image))
+# # original.save('Original.png')
+# original.save("Encrypted.png")
+# original.show()
+# pix = np.asarray(Encrypted_Image)
+# # pic = Image.open("img2_Low.png", mode='r')
+# pix = np.array(Encrypted_Image)
+# Decrypted_Image = TDEA_Decrypt(False, pix, Key1_init, Key2_init, Key3_init, Inv_IP)
+#
+# print("--- %s seconds ---" % (time.time() - start_time))
+#
+# original = Image.fromarray(np.uint8(Decrypted_Image))
+# original.save("Decrypted.png")
+# original.show()
+#
+# # =====================================================
+# print("===============================")
+# print("==============RC4==============")
+# print("===============================")
+#
+#
+# def Testing():
+#     inspect = False
+#     doImages = True
+#     imageToDo = "imgList"
+#     Images = {"imgList": ['cat_low', 'cape_low']}
+#
+#     if not inspect:
+#
+#         pText = Plaintext
+#         kText = Key1_init
+#         # kText = Key2_init
+#         # kText = Key3_init
+#         start = default_timer()
+#
+#         eText = RC4_Encrypt(inspect, pText, kText)
+#         print(f"Encryption\nCiphertext:\n{eText}")
+#
+#         if default_timer() - start > 60:
+#             print(
+#                 f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#         else:
+#             print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#         start = default_timer()
+#
+#         dText = RC4_Decrypt(inspect, eText, kText)
+#         print(f""
+#               f"\nDecryption\nPlaintext:\n{dText}")
+#
+#         if default_timer() - start > 60:
+#             print(
+#                 f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#         else:
+#             print(
+#                 f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#         if doImages:
+#
+#             for i in Images[imageToDo]:
+#                 print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
+#                 start = default_timer()
+#
+#                 pImg = Image.open(i + '.png')
+#                 pImg.show()
+#                 # pImg.save(f"{i}_original.png")
+#                 npImg = np.array(pImg)
+#                 kText = Key1_init
+#                 # kText = Key2_init
+#                 # kText = Key3_init
+#
+#                 eImg = RC4_Encrypt(inspect, npImg, kText)
+#                 eImg.show()
+#                 # eImg.save(f"{i}_encrypted.png")
+#                 eImg = np.array(eImg)
+#
+#                 if default_timer() - start > 60:
+#                     print(
+#                         f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#                 else:
+#                     print(
+#                         f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#                 start = default_timer()
+#
+#                 dImg = RC4_Decrypt(inspect, eImg, kText)
+#                 dImg.show()
+#                 # dImg.save(f"{i}_decrypted.png")
+#
+#                 if default_timer() - start > 60:
+#                     print(
+#                         f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#                 else:
+#                     print(
+#                         f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#     else:
+#
+#         pText = Plaintext
+#         kText = Key1_init
+#         # kText = Key2_init
+#         # kText = Key3_init
+#         start = default_timer()
+#
+#         eText = RC4_Encrypt(inspect, pText, kText)
+#         print(f"Encryption\nS-table:\n{eText['S-table']}\nCiphertext:\n{eText['Ciphertext']}")
+#
+#         if default_timer() - start > 60:
+#             print(
+#                 f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#         else:
+#             print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#         start = default_timer()
+#
+#         dText = RC4_Decrypt(inspect, eText['Ciphertext'], kText)
+#         print(f"\nDecryption\nS-table:\n{dText['S-table']}\nPlaintext:\n{dText['Plaintext']}")
+#
+#         if default_timer() - start > 60:
+#             print(
+#                 f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#         else:
+#             print(
+#                 f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#         if doImages:
+#
+#             for i in Images[imageToDo]:
+#                 print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
+#                 start = default_timer()
+#
+#                 pImg = Image.open(i + '.png')
+#                 pImg.show()
+#                 # pImg.save(f"{i}_original.png")
+#                 npImg = np.array(pImg)
+#                 kText = Key1_init
+#                 # kText = Key2_init
+#                 # kText = Key3_init
+#
+#                 eImg = RC4_Encrypt(inspect, npImg, kText)
+#                 print(f"S-table:\n{eImg['S-table']}")
+#                 eImg['Ciphertext'].show()
+#                 # eImg['Ciphertext'].save(f"{i}_encrypted.png")
+#                 eImg['Ciphertext'] = np.array(eImg['Ciphertext'])
+#
+#                 if default_timer() - start > 60:
+#                     print(
+#                         f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#                 else:
+#                     print(
+#                         f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#                 start = default_timer()
+#
+#                 dImg = RC4_Decrypt(inspect, eImg['Ciphertext'], kText)
+#                 print(f"S-table:\n{dImg['S-table']}")
+#                 dImg['Plaintext'].show()
+#                 # dImg['Plaintext'].save(f"{i}_decrypted.png")
+#
+#                 if default_timer() - start > 60:
+#                     print(
+#                         f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#                 else:
+#                     print(
+#                         f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#
+# start = default_timer()
+# Testing()
+# if default_timer() - start > 60:
+#     print(f"Finally finished in {(default_timer() - start) / 60} minutes at"
+#           f" {datetime.now().strftime('%H:%M:%S')}\n\n")
+# else:
+#     print(f"Finally finished in {default_timer() - start} seconds a"
+#           f"t {datetime.now().strftime('%H:%M:%S')}\n\n")

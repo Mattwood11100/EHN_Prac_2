@@ -789,210 +789,210 @@ def AES_Decrypt(inspect_mode, ciphertext, iv, key, inv_sbox_array):
             return hexToStr(''.join(decryptedFinal))
 
 
-# Testing function
-def Testing():
-    inspect = False
-    ivCBCProvided = True
-    doImages = True
-    imageToDo = "imgList"
-    Images = {
-        "imgList": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low', 'circuit',
-                    'brain_low',
-                    'brain', 'starwars_low', 'starwars'],
-
-        "imgListLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low',
-                       'brain_low',
-                       'starwars_low'],
-
-        "imgListLowOnly": ['circuit_low', 'brain_low', 'starwars_low'],
-
-        "imgListLarge": ['circuit', 'brain', 'starwars']}
-
-    if not inspect:
-
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
-        start = default_timer()
-        if not ivCBCProvided:
-
-            eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
-            print(f"Encryption\nCiphertext:\n{eText}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-            else:
-                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-            start = default_timer()
-
-            dText = AES_Decrypt(inspect, eText, None, kText,
-                                np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(f""
-                  f"\nDecryption\nPlaintext:\n{dText}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-            else:
-                print(
-                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-        else:
-
-            eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-            print(eText)
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-            else:
-                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-            start = default_timer()
-
-            dText = AES_Decrypt(inspect, eText, np.load('AES_CBC_IV.npy'), kText,
-                                np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(dText)
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-            else:
-                print(
-                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-            if doImages:
-
-                for i in Images[imageToDo]:
-                    print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
-                    start = default_timer()
-
-                    pImg = Image.open(i + '.png')
-                    pImg.show()
-                    pImg.save(f"AES_Images/{i}_original.png")
-                    npImg = np.array(pImg)
-                    kText = "I am the key"
-
-                    eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-                    eImg.show()
-                    eImg.save(f"AES_Images/{i}_encrypted.png")
-                    eImg = np.array(eImg)
-
-                    if default_timer() - start > 60:
-                        print(
-                            f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-                    else:
-                        print(
-                            f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-                    start = default_timer()
-
-                    dImg = AES_Decrypt(inspect, eImg, np.load('AES_CBC_IV.npy'), kText,
-                                       np.load('AES_Inverse_Sbox_lookup.npy'))
-                    dImg.show()
-                    dImg.save(f"AES_Images/{i}_decrypted.png")
-
-                    if default_timer() - start > 60:
-                        print(
-                            f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-                    else:
-                        print(
-                            f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-    else:
-
-        pText = "You won't get me"
-        kText = "I am the key that won't be broke"
-        start = default_timer()
-
-        if not ivCBCProvided:
-
-            eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
-            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-            else:
-                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-            start = default_timer()
-
-            dText = AES_Decrypt(inspect, eText['Ciphertext'], None, kText,
-                                np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(f""
-                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-            else:
-                print(
-                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-        else:
-
-            eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-            print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-            else:
-                print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-            start = default_timer()
-
-            dText = AES_Decrypt(inspect, eText['Ciphertext'], np.load('AES_CBC_IV.npy'), kText,
-                                np.load('AES_Inverse_Sbox_lookup.npy'))
-            print(f""
-                  f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
-
-            if default_timer() - start > 60:
-                print(
-                    f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-            else:
-                print(
-                    f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
-
-            if doImages:
-
-                for i in Images[imageToDo]:
-                    print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
-                    start = default_timer()
-
-                    pImg = Image.open(i + '.png')
-                    pImg.show()
-                    npImg = np.array(pImg)
-                    kText = "I am the key"
-
-                    eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
-                    print(f"States:\n{eImg['States']}")
-                    eImg['Ciphertext'].show()
-                    eImg['Ciphertext'].save(f"{i}_encrypted.png")
-                    eImg['Ciphertext'] = np.array(eImg)
-
-                    if default_timer() - start > 60:
-                        print(
-                            f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
-                    else:
-                        print(
-                            f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
-
-                    start = default_timer()
-
-                    dImg = AES_Decrypt(inspect, eImg, np.load('AES_CBC_IV.npy'), kText,
-                                       np.load('AES_Inverse_Sbox_lookup.npy'))
-                    print(f"States:\n{dImg['States']}")
-                    dImg['Plaintext'].show()
-                    dImg['Plaintext'].save(f"{i}_encrypted.png")
-
-                    if default_timer() - start > 60:
-                        print(
-                            f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
-                    else:
-                        print(
-                            f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+# # Testing function
+# def Testing():
+#     inspect = False
+#     ivCBCProvided = True
+#     doImages = True
+#     imageToDo = "imgList"
+#     Images = {
+#         "imgList": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low', 'circuit',
+#                     'brain_low',
+#                     'brain', 'starwars_low', 'starwars'],
+#
+#         "imgListLow": ['circuit_small', 'circuit_small_big', 'circuit_low_small', 'circuit_low',
+#                        'brain_low',
+#                        'starwars_low'],
+#
+#         "imgListLowOnly": ['circuit_low', 'brain_low', 'starwars_low'],
+#
+#         "imgListLarge": ['circuit', 'brain', 'starwars']}
+#
+#     if not inspect:
+#
+#         pText = "You won't get me"
+#         kText = "I am the key that won't be broke"
+#         start = default_timer()
+#         if not ivCBCProvided:
+#
+#             eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
+#             print(f"Encryption\nCiphertext:\n{eText}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#             else:
+#                 print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#             start = default_timer()
+#
+#             dText = AES_Decrypt(inspect, eText, None, kText,
+#                                 np.load('AES_Inverse_Sbox_lookup.npy'))
+#             print(f""
+#                   f"\nDecryption\nPlaintext:\n{dText}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#             else:
+#                 print(
+#                     f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#         else:
+#
+#             eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+#             print(eText)
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#             else:
+#                 print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#             start = default_timer()
+#
+#             dText = AES_Decrypt(inspect, eText, np.load('AES_CBC_IV.npy'), kText,
+#                                 np.load('AES_Inverse_Sbox_lookup.npy'))
+#             print(dText)
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#             else:
+#                 print(
+#                     f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#             if doImages:
+#
+#                 for i in Images[imageToDo]:
+#                     print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
+#                     start = default_timer()
+#
+#                     pImg = Image.open(i + '.png')
+#                     pImg.show()
+#                     pImg.save(f"AES_Images/{i}_original.png")
+#                     npImg = np.array(pImg)
+#                     kText = "I am the key"
+#
+#                     eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+#                     eImg.show()
+#                     eImg.save(f"AES_Images/{i}_encrypted.png")
+#                     eImg = np.array(eImg)
+#
+#                     if default_timer() - start > 60:
+#                         print(
+#                             f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#                     else:
+#                         print(
+#                             f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#                     start = default_timer()
+#
+#                     dImg = AES_Decrypt(inspect, eImg, np.load('AES_CBC_IV.npy'), kText,
+#                                        np.load('AES_Inverse_Sbox_lookup.npy'))
+#                     dImg.show()
+#                     dImg.save(f"AES_Images/{i}_decrypted.png")
+#
+#                     if default_timer() - start > 60:
+#                         print(
+#                             f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#                     else:
+#                         print(
+#                             f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#     else:
+#
+#         pText = "You won't get me"
+#         kText = "I am the key that won't be broke"
+#         start = default_timer()
+#
+#         if not ivCBCProvided:
+#
+#             eText = AES_Encrypt(inspect, pText, None, kText, np.load('AES_Sbox_lookup.npy'))
+#             print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#             else:
+#                 print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#             start = default_timer()
+#
+#             dText = AES_Decrypt(inspect, eText['Ciphertext'], None, kText,
+#                                 np.load('AES_Inverse_Sbox_lookup.npy'))
+#             print(f""
+#                   f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#             else:
+#                 print(
+#                     f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#         else:
+#
+#             eText = AES_Encrypt(inspect, pText, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+#             print(f"Encryption\nStates:\n{eText['States']}\nCiphertext:\n{eText['Ciphertext']}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#             else:
+#                 print(f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#             start = default_timer()
+#
+#             dText = AES_Decrypt(inspect, eText['Ciphertext'], np.load('AES_CBC_IV.npy'), kText,
+#                                 np.load('AES_Inverse_Sbox_lookup.npy'))
+#             print(f""
+#                   f"\nDecryption\nStates:\n{dText['States']}\nPlaintext:\n{dText['Plaintext']}")
+#
+#             if default_timer() - start > 60:
+#                 print(
+#                     f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#             else:
+#                 print(
+#                     f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+#             if doImages:
+#
+#                 for i in Images[imageToDo]:
+#                     print(f"Running {i} now\t{datetime.now().strftime('%H:%M:%S')}\n")
+#                     start = default_timer()
+#
+#                     pImg = Image.open(i + '.png')
+#                     pImg.show()
+#                     npImg = np.array(pImg)
+#                     kText = "I am the key"
+#
+#                     eImg = AES_Encrypt(inspect, npImg, np.load('AES_CBC_IV.npy'), kText, np.load('AES_Sbox_lookup.npy'))
+#                     print(f"States:\n{eImg['States']}")
+#                     eImg['Ciphertext'].show()
+#                     eImg['Ciphertext'].save(f"{i}_encrypted.png")
+#                     eImg['Ciphertext'] = np.array(eImg)
+#
+#                     if default_timer() - start > 60:
+#                         print(
+#                             f"Done encryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}")
+#                     else:
+#                         print(
+#                             f"Done encryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}")
+#
+#                     start = default_timer()
+#
+#                     dImg = AES_Decrypt(inspect, eImg, np.load('AES_CBC_IV.npy'), kText,
+#                                        np.load('AES_Inverse_Sbox_lookup.npy'))
+#                     print(f"States:\n{dImg['States']}")
+#                     dImg['Plaintext'].show()
+#                     dImg['Plaintext'].save(f"{i}_encrypted.png")
+#
+#                     if default_timer() - start > 60:
+#                         print(
+#                             f"Done decryption in {(default_timer() - start) / 60} minutes at {datetime.now().strftime('%H:%M:%S')}\n\n")
+#                     else:
+#                         print(
+#                             f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
 
 #
 # start = default_timer()
@@ -1606,7 +1606,7 @@ def TDEA_Decrypt(inspect_mode, plaintext, key1, key2, key3, inv_ip):
 def strToHex(text):
     hexOut = []
     for i in text:
-        hexOut.append(hex(ord(i)).upper()[2:])
+        hexOut.append(hex(ord(i)).upper()[2:].zfill(2))
 
     return hexOut
 
