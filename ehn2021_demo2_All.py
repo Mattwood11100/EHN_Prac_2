@@ -1599,12 +1599,7 @@ def TDEA_Decrypt(inspect_mode, plaintext, key1, key2, key3, inv_ip):
 
 # ======================================================================================================================
 
-import numpy as np
-from PIL import Image
-from timeit import default_timer
-from datetime import datetime
 
-np.set_printoptions(precision=4, suppress=True)
 
 
 # Helper function the converts strings to hex numbers
