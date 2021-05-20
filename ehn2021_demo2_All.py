@@ -4,7 +4,7 @@ import random
 from timeit import default_timer
 from datetime import datetime
 
-np.set_printoptions(precision=4, suppress=False, threshold=100000)
+np.set_printoptions(precision=4, suppress=False, threshold=100000000)
 
 
 # Class for the Initial Vector for the CBC. If the vector provided is
