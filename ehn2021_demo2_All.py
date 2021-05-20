@@ -994,15 +994,15 @@ def Testing():
                         print(
                             f"Done decryption in {default_timer() - start} seconds at {datetime.now().strftime('%H:%M:%S')}\n\n")
 
-
-start = default_timer()
-Testing()
-if default_timer() - start > 60:
-    print(f"Finally finished in {(default_timer() - start) / 60} minutes at"
-          f" {datetime.now().strftime('%H:%M:%S')}\n\n")
-else:
-    print(f"Finally finished in {default_timer() - start} seconds a"
-          f"t {datetime.now().strftime('%H:%M:%S')}\n\n")
+#
+# start = default_timer()
+# Testing()
+# if default_timer() - start > 60:
+#     print(f"Finally finished in {(default_timer() - start) / 60} minutes at"
+#           f" {datetime.now().strftime('%H:%M:%S')}\n\n")
+# else:
+#     print(f"Finally finished in {default_timer() - start} seconds a"
+#           f"t {datetime.now().strftime('%H:%M:%S')}\n\n")
 
 
 
